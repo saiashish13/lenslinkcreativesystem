@@ -1,6 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowUpRight, Camera, Sparkles, CalendarCheck, MessagesSquare, ShieldCheck, Wand2, Star, Check, Plus } from "lucide-react";
 import { useState } from "react";
+import { SiteNav } from "@/components/site-nav";
 import hero from "@/assets/hero-photographer.jpg";
 import w1 from "@/assets/work-1.jpg";
 import w2 from "@/assets/work-2.jpg";
@@ -16,33 +17,6 @@ export const Route = createFileRoute("/")({
     ],
   }),
 });
-
-function Nav() {
-  return (
-    <header className="fixed top-0 inset-x-0 z-50 backdrop-blur-xl bg-background/60 border-b border-border/50">
-      <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-        <a href="#" className="flex items-center gap-2 font-display text-lg tracking-tight">
-          <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-[image:var(--gradient-gold)] text-primary-foreground">
-            <Camera className="h-4 w-4" />
-          </span>
-          LensLink<span className="text-primary">.AI</span>
-        </a>
-        <nav className="hidden md:flex items-center gap-8 text-sm text-muted-foreground">
-          <a href="#discover" className="hover:text-foreground transition">Discover</a>
-          <a href="#features" className="hover:text-foreground transition">Platform</a>
-          <a href="#pricing" className="hover:text-foreground transition">Pricing</a>
-          <a href="#faq" className="hover:text-foreground transition">FAQ</a>
-        </nav>
-        <div className="flex items-center gap-2">
-          <a href="#" className="hidden sm:inline text-sm text-muted-foreground hover:text-foreground px-3 py-2">Sign in</a>
-          <a href="#cta" className="inline-flex items-center gap-1 rounded-md bg-[image:var(--gradient-gold)] text-primary-foreground px-4 py-2 text-sm font-medium shadow-[var(--shadow-gold)] hover:opacity-90 transition">
-            Get started <ArrowUpRight className="h-4 w-4" />
-          </a>
-        </div>
-      </div>
-    </header>
-  );
-}
 
 function Hero() {
   return (
@@ -60,9 +34,9 @@ function Hero() {
             Discover photographers, videographers and editors. Book sessions, chat in real time, pay securely and receive final deliverables — orchestrated by AI agents working quietly in the background.
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-3">
-            <a href="#cta" className="inline-flex items-center gap-2 rounded-md bg-[image:var(--gradient-gold)] text-primary-foreground px-5 py-3 text-sm font-medium shadow-[var(--shadow-gold)] hover:opacity-90 transition">
+            <Link to="/marketplace" className="inline-flex items-center gap-2 rounded-md bg-[image:var(--gradient-gold)] text-primary-foreground px-5 py-3 text-sm font-medium shadow-[var(--shadow-gold)] hover:opacity-90 transition">
               Hire a creator <ArrowUpRight className="h-4 w-4" />
-            </a>
+            </Link>
             <a href="#features" className="inline-flex items-center gap-2 rounded-md border border-border px-5 py-3 text-sm hover:bg-card transition">
               I'm a creator
             </a>
@@ -365,7 +339,7 @@ function Footer() {
 function Landing() {
   return (
     <main className="min-h-screen">
-      <Nav />
+      <SiteNav />
       <Hero />
       <Logos />
       <Features />
