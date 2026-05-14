@@ -31,7 +31,7 @@ function Marketplace() {
   const navigate = useNavigate({ from: Route.fullPath });
 
   const update = (patch: Partial<typeof search>) =>
-    navigate({ search: (prev) => ({ ...prev, ...patch }), replace: true });
+    navigate({ search: (prev: typeof search) => ({ ...prev, ...patch }), replace: true });
 
   const reset = () =>
     navigate({ search: { q: "", city: "all", category: "all", availability: "any", minRating: 0, maxBudget: 1000 } });
