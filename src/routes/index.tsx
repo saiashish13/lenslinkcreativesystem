@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ArrowUpRight, Camera, Sparkles, CalendarCheck, MessagesSquare, ShieldCheck, Wand2, Star, Check } from "lucide-react";
+import { ArrowUpRight, Camera, Sparkles, CalendarCheck, MessagesSquare, ShieldCheck, Wand2, Star, Check, Plus } from "lucide-react";
+import { useState } from "react";
 import hero from "@/assets/hero-photographer.jpg";
 import w1 from "@/assets/work-1.jpg";
 import w2 from "@/assets/work-2.jpg";
@@ -265,6 +266,84 @@ function CTA() {
   );
 }
 
+const testimonials = [
+  { quote: "We replaced four tools with LensLink. Our booking-to-delivery time dropped from 11 days to 3.", name: "Amelia Chen", role: "Founder, Studio Kuro" },
+  { quote: "The AI matchmaking found me a wedding photographer in Tuscany at 1am. Booked, paid, done.", name: "Jonas Weber", role: "Client · Berlin" },
+  { quote: "Auto-cull and tagging alone save me 6 hours per shoot. It feels illegal.", name: "Priya Raman", role: "Editor · Mumbai" },
+];
+function Testimonials() {
+  return (
+    <section className="py-28 border-t border-border/60">
+      <div className="max-w-7xl mx-auto px-6">
+        <div className="max-w-2xl mb-14">
+          <p className="text-xs uppercase tracking-[0.2em] text-primary mb-4">Loved by creators</p>
+          <h2 className="font-display text-4xl sm:text-5xl tracking-tight">A quiet revolution in the studio.</h2>
+        </div>
+        <div className="grid md:grid-cols-3 gap-4">
+          {testimonials.map((t) => (
+            <figure key={t.name} className="rounded-2xl border border-border bg-card p-8 flex flex-col">
+              <div className="flex gap-0.5 mb-5">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Star key={i} className="h-4 w-4 fill-primary text-primary" />
+                ))}
+              </div>
+              <blockquote className="text-base leading-relaxed flex-1">"{t.quote}"</blockquote>
+              <figcaption className="mt-6 pt-5 border-t border-border/60">
+                <div className="text-sm font-medium">{t.name}</div>
+                <div className="text-xs text-muted-foreground">{t.role}</div>
+              </figcaption>
+            </figure>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+const faqs = [
+  { q: "How does the AI matchmaking work?", a: "Describe your shoot in plain language — event, style, budget, location, dates. Our agent ranks creators using portfolio embeddings, availability, reviews and price-to-fit, then surfaces the top three with reasoning." },
+  { q: "When do creators get paid?", a: "Funds are held in escrow when the client books. They release automatically on delivery acceptance, or after a 72-hour review window. Payouts hit your account within 1 business day in 38 currencies." },
+  { q: "Can I bring my own clients?", a: "Yes. Pro and Agency plans include a private booking link with your branding — clients book, pay and chat through LensLink without ever seeing the marketplace." },
+  { q: "What about RAW files and large deliveries?", a: "Chunked uploads handle files up to 50GB per delivery. Watermarked previews are generated automatically; final files are unlocked on payment with expiring secure links." },
+  { q: "Do you take a commission?", a: "On the Free plan, 10% on completed bookings. Pro reduces it to 5%. Agency is 0% commission with a flat monthly seat fee — best for established studios." },
+  { q: "Is there a mobile app?", a: "The web app is a fully installable PWA with offline mode and push notifications. Native iOS and Android apps are on the roadmap for Q3." },
+];
+function FAQ() {
+  const [open, setOpen] = useState<number | null>(0);
+  return (
+    <section id="faq" className="py-28 border-t border-border/60">
+      <div className="max-w-5xl mx-auto px-6">
+        <div className="text-center mb-14">
+          <p className="text-xs uppercase tracking-[0.2em] text-primary mb-4">FAQ</p>
+          <h2 className="font-display text-4xl sm:text-5xl tracking-tight">Questions, answered.</h2>
+        </div>
+        <div className="rounded-2xl border border-border bg-card/60 divide-y divide-border">
+          {faqs.map((f, i) => {
+            const isOpen = open === i;
+            return (
+              <div key={f.q}>
+                <button
+                  onClick={() => setOpen(isOpen ? null : i)}
+                  className="w-full flex items-center justify-between gap-6 text-left px-6 py-5 hover:bg-secondary/30 transition"
+                  aria-expanded={isOpen}
+                >
+                  <span className="text-base font-medium">{f.q}</span>
+                  <Plus className={`h-4 w-4 text-primary shrink-0 transition-transform duration-300 ${isOpen ? "rotate-45" : ""}`} />
+                </button>
+                <div className={`grid transition-all duration-300 ease-out ${isOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}>
+                  <div className="overflow-hidden">
+                    <p className="px-6 pb-6 text-sm text-muted-foreground leading-relaxed max-w-3xl">{f.a}</p>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function Footer() {
   return (
     <footer className="border-t border-border/60 py-12">
@@ -292,7 +371,9 @@ function Landing() {
       <Features />
       <Discover />
       <Workflow />
+      <Testimonials />
       <Pricing />
+      <FAQ />
       <CTA />
       <Footer />
     </main>
