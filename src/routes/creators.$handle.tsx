@@ -3,6 +3,7 @@ import { useState } from "react";
 import { ArrowUpRight, Calendar, Camera, Check, Clock, MapPin, MessageSquare, Share2, Star, Verified } from "lucide-react";
 import { SiteNav } from "@/components/site-nav";
 import { getProfessional, PROFESSIONALS } from "@/lib/professionals";
+import { formatINR } from "@/lib/format";
 import work1 from "@/assets/work-1.jpg";
 import work2 from "@/assets/work-2.jpg";
 import work3 from "@/assets/work-3.jpg";
@@ -152,7 +153,7 @@ function CreatorProfile() {
                     <div key={s.name} className="rounded-2xl border border-border bg-card p-5 flex flex-col">
                       <div className="text-xs uppercase tracking-wider text-muted-foreground">{s.duration}</div>
                       <h3 className="font-display text-xl mt-1">{s.name}</h3>
-                      <div className="mt-4 font-display text-3xl">${pro.hourly * s.priceMult}<span className="text-sm text-muted-foreground font-sans"> total</span></div>
+                    <div className="mt-4 font-display text-3xl">{formatINR(pro.hourly * s.priceMult)}<span className="text-sm text-muted-foreground font-sans"> total</span></div>
                       <ul className="mt-4 space-y-2 text-sm text-muted-foreground flex-1">
                         {s.includes.map((it) => (
                           <li key={it} className="flex items-start gap-2"><Check className="h-4 w-4 text-primary mt-0.5 shrink-0" /> {it}</li>
@@ -191,7 +192,7 @@ function CreatorProfile() {
             <div className="rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-gold)]">
               <div className="flex items-baseline justify-between">
                 <div>
-                  <div className="font-display text-3xl">${pro.hourly}<span className="text-sm text-muted-foreground font-sans"> /hr</span></div>
+                  <div className="font-display text-3xl">{formatINR(pro.hourly)}<span className="text-sm text-muted-foreground font-sans"> /hr</span></div>
                   <div className="text-xs text-muted-foreground mt-1 capitalize">Available {pro.availability.replace("-", " ")}</div>
                 </div>
                 <span className="text-[10px] px-2 py-1 rounded-md bg-primary/15 text-primary border border-primary/30 inline-flex items-center gap-1">
@@ -269,7 +270,7 @@ function CreatorProfile() {
                       <div className="font-medium text-sm">{r.name}</div>
                       <div className="text-xs text-muted-foreground">{r.specialty}</div>
                     </div>
-                    <div className="text-sm font-display">${r.hourly}<span className="text-xs text-muted-foreground font-sans">/hr</span></div>
+                    <div className="text-sm font-display">{formatINR(r.hourly)}<span className="text-xs text-muted-foreground font-sans">/hr</span></div>
                   </div>
                 </Link>
               ))}
