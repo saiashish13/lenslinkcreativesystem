@@ -42,6 +42,35 @@ export const PROFESSIONALS: Professional[] = [
 
 export const CITIES = Array.from(new Set(PROFESSIONALS.map((p) => p.city))).sort();
 
+// Seeded list of Indian cities & towns — drives location autocomplete so users
+// can search even small/lesser-known places. Substring match is used downstream.
+export const INDIAN_LOCATIONS = [
+  "Mumbai", "New Delhi", "Bengaluru", "Hyderabad", "Chennai", "Kolkata", "Pune", "Ahmedabad",
+  "Jaipur", "Surat", "Lucknow", "Kanpur", "Nagpur", "Indore", "Bhopal", "Patna", "Vadodara",
+  "Ludhiana", "Agra", "Nashik", "Faridabad", "Meerut", "Rajkot", "Varanasi", "Amritsar",
+  "Allahabad", "Visakhapatnam", "Coimbatore", "Madurai", "Tiruchirappalli", "Mysuru", "Mangaluru",
+  "Goa", "Panaji", "Margao", "Vasco da Gama", "Calangute", "Anjuna", "Arambol",
+  "Udaipur", "Jodhpur", "Jaisalmer", "Pushkar", "Mount Abu", "Bikaner", "Ajmer",
+  "Rishikesh", "Haridwar", "Dehradun", "Mussoorie", "Nainital", "Almora", "Auli",
+  "Shimla", "Manali", "Dharamshala", "McLeod Ganj", "Spiti", "Kasol", "Kullu",
+  "Srinagar", "Gulmarg", "Pahalgam", "Leh", "Ladakh", "Nubra",
+  "Darjeeling", "Gangtok", "Pelling", "Shillong", "Cherrapunji", "Guwahati", "Kaziranga",
+  "Imphal", "Aizawl", "Kohima", "Itanagar", "Tawang",
+  "Alibaug", "Lonavala", "Khandala", "Mahabaleshwar", "Igatpuri", "Tarkarli", "Ratnagiri",
+  "Coorg", "Madikeri", "Chikmagalur", "Hampi", "Badami", "Gokarna", "Murudeshwar",
+  "Munnar", "Alleppey", "Kochi", "Kovalam", "Varkala", "Wayanad", "Thekkady", "Kumarakom",
+  "Pondicherry", "Auroville", "Mahabalipuram", "Kanyakumari", "Rameshwaram", "Ooty", "Kodaikanal",
+  "Bhubaneswar", "Puri", "Konark", "Cuttack",
+  "Raipur", "Ranchi", "Jamshedpur", "Dhanbad", "Bhilai",
+  "Chandigarh", "Mohali", "Panchkula", "Gurugram", "Noida", "Ghaziabad",
+  "Tirupati", "Vijayawada", "Guntur", "Nellore", "Warangal",
+  "Aurangabad", "Solapur", "Kolhapur", "Sangli", "Akola",
+  "Jabalpur", "Gwalior", "Ujjain", "Khajuraho", "Orchha",
+  "Hubballi", "Belagavi", "Davangere", "Tumakuru",
+  "Kozhikode", "Thrissur", "Thiruvananthapuram",
+  "Andaman", "Port Blair", "Havelock", "Neil Island",
+];
+
 export function getProfessional(handle: string): Professional | undefined {
   return PROFESSIONALS.find((p) => p.handle === handle);
 }
