@@ -200,7 +200,8 @@ function Marketplace() {
                         </div>
                       </div>
                       <Link
-                        to="/marketplace"
+                        to="/creators/$handle"
+                        params={{ handle: p.handle }}
                         className="mt-5 inline-flex w-full items-center justify-center gap-1 rounded-md bg-[image:var(--gradient-gold)] text-primary-foreground px-3 py-2 text-sm font-medium hover:opacity-90 transition"
                       >
                         View profile <ArrowUpRight className="h-4 w-4" />
