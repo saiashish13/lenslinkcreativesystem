@@ -184,8 +184,8 @@ function Workflow() {
 
 const plans = [
   { name: "Starter", price: "Free", desc: "For clients booking their first shoot.", features: ["AI matchmaking", "Secure escrow", "Up to 3 active bookings"], cta: "Start free" },
-  { name: "Pro", price: "$29", suffix: "/mo", desc: "For working creators.", features: ["Featured portfolio", "AI editing copilot", "Auto invoices & calendar sync", "Priority leads"], cta: "Go Pro", featured: true },
-  { name: "Agency", price: "$99", suffix: "/mo", desc: "For studios and teams.", features: ["Team workspaces", "White-label delivery", "Approval workflows", "API & webhooks"], cta: "Talk to sales" },
+  { name: "Pro", price: "₹2,499", suffix: "/mo", desc: "For working creators.", features: ["Featured portfolio", "AI editing copilot", "Auto invoices & GST", "Priority leads"], cta: "Go Pro", featured: true },
+  { name: "Agency", price: "₹8,999", suffix: "/mo", desc: "For studios and teams.", features: ["Team workspaces", "White-label delivery", "Approval workflows", "API & webhooks"], cta: "Talk to sales" },
 ];
 function Pricing() {
   return (
