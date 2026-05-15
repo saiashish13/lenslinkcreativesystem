@@ -41,3 +41,7 @@ export const PROFESSIONALS: Professional[] = [
 ];
 
 export const CITIES = Array.from(new Set(PROFESSIONALS.map((p) => p.city))).sort();
+
+export function getProfessional(handle: string): Professional | undefined {
+  return PROFESSIONALS.find((p) => p.handle === handle);
+}
