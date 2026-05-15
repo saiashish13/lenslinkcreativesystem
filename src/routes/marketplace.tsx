@@ -4,15 +4,16 @@ import { z } from "zod";
 import { useMemo } from "react";
 import { Search, MapPin, Star, SlidersHorizontal, X, ArrowUpRight } from "lucide-react";
 import { SiteNav } from "@/components/site-nav";
-import { PROFESSIONALS, CITIES, type Category, type Availability } from "@/lib/professionals";
+import { PROFESSIONALS, INDIAN_LOCATIONS, type Category, type Availability } from "@/lib/professionals";
+import { formatINR } from "@/lib/format";
 
 const searchSchema = z.object({
   q: fallback(z.string(), "").default(""),
-  city: fallback(z.string(), "all").default("all"),
+  city: fallback(z.string(), "").default(""),
   category: fallback(z.enum(["all", "photographer", "videographer", "editor"]), "all").default("all"),
   availability: fallback(z.enum(["any", "today", "this-week", "this-month"]), "any").default("any"),
   minRating: fallback(z.number().min(0).max(5), 0).default(0),
-  maxBudget: fallback(z.number().min(50).max(1000), 1000).default(1000),
+  maxBudget: fallback(z.number().min(2000).max(50000), 50000).default(50000),
 });
 
 export const Route = createFileRoute("/marketplace")({
@@ -34,12 +35,13 @@ function Marketplace() {
     navigate({ search: (prev: typeof search) => ({ ...prev, ...patch }), replace: true });
 
   const reset = () =>
-    navigate({ search: { q: "", city: "all", category: "all", availability: "any", minRating: 0, maxBudget: 1000 } });
+    navigate({ search: { q: "", city: "", category: "all", availability: "any", minRating: 0, maxBudget: 50000 } });
 
   const results = useMemo(() => {
+    const cityQuery = search.city.trim().toLowerCase();
     return PROFESSIONALS.filter((p) => {
       if (search.q && !`${p.name} ${p.specialty} ${p.handle}`.toLowerCase().includes(search.q.toLowerCase())) return false;
-      if (search.city !== "all" && p.city !== search.city) return false;
+      if (cityQuery && !p.city.toLowerCase().includes(cityQuery)) return false;
       if (search.category !== "all" && p.category !== search.category) return false;
       if (search.availability !== "any" && p.availability !== search.availability) return false;
       if (p.rating < search.minRating) return false;
@@ -49,11 +51,11 @@ function Marketplace() {
   }, [search]);
 
   const activeFilters =
-    (search.city !== "all" ? 1 : 0) +
+    (search.city.trim() !== "" ? 1 : 0) +
     (search.category !== "all" ? 1 : 0) +
     (search.availability !== "any" ? 1 : 0) +
     (search.minRating > 0 ? 1 : 0) +
-    (search.maxBudget < 1000 ? 1 : 0);
+    (search.maxBudget < 50000 ? 1 : 0);
 
   return (
     <main className="min-h-screen">
@@ -62,13 +64,13 @@ function Marketplace() {
         <div className="max-w-7xl mx-auto px-6">
           <p className="text-xs uppercase tracking-[0.2em] text-primary mb-3">Marketplace</p>
           <h1 className="font-display text-4xl sm:text-5xl tracking-tight max-w-3xl">Find the right creator for your next shoot.</h1>
-          <p className="mt-3 text-muted-foreground max-w-xl">12,000+ verified photographers, videographers and editors. Filter, compare, book in minutes.</p>
+          <p className="mt-3 text-muted-foreground max-w-xl">12,000+ verified photographers, videographers and editors across India. Filter, compare, book in minutes.</p>
           <div className="mt-8 relative max-w-xl">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <input
               value={search.q}
               onChange={(e) => update({ q: e.target.value })}
-              placeholder="Try ‘wedding in Florence’ or ‘product editor’"
+              placeholder="Try ‘wedding in Udaipur’ or ‘product editor in Bengaluru’"
               className="w-full pl-10 pr-4 py-3 rounded-lg bg-card border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
             />
           </div>
@@ -105,14 +107,24 @@ function Marketplace() {
               </FilterGroup>
 
               <FilterGroup label="Location">
-                <select
-                  value={search.city}
-                  onChange={(e) => update({ city: e.target.value })}
-                  className="w-full rounded-md bg-background border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
-                >
-                  <option value="all">All cities</option>
-                  {CITIES.map((c) => <option key={c} value={c}>{c}</option>)}
-                </select>
+                <div className="relative">
+                  <MapPin className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                  <input
+                    list="indian-locations"
+                    value={search.city}
+                    onChange={(e) => update({ city: e.target.value })}
+                    placeholder="Any city or town in India"
+                    className="w-full rounded-md bg-background border border-border pl-8 pr-7 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  />
+                  {search.city && (
+                    <button onClick={() => update({ city: "" })} aria-label="Clear location" className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                      <X className="h-3 w-3" />
+                    </button>
+                  )}
+                  <datalist id="indian-locations">
+                    {INDIAN_LOCATIONS.map((c) => <option key={c} value={c} />)}
+                  </datalist>
+                </div>
               </FilterGroup>
 
               <FilterGroup label="Availability">
@@ -128,14 +140,14 @@ function Marketplace() {
                 />
               </FilterGroup>
 
-              <FilterGroup label={`Max budget · $${search.maxBudget}/hr`}>
+              <FilterGroup label={`Max budget · ${formatINR(search.maxBudget)}/hr`}>
                 <input
-                  type="range" min={50} max={1000} step={10}
+                  type="range" min={2000} max={50000} step={500}
                   value={search.maxBudget}
                   onChange={(e) => update({ maxBudget: Number(e.target.value) })}
                   className="w-full accent-[oklch(0.78_0.13_82)]"
                 />
-                <div className="flex justify-between text-[10px] text-muted-foreground mt-1"><span>$50</span><span>$1000+</span></div>
+                <div className="flex justify-between text-[10px] text-muted-foreground mt-1"><span>{formatINR(2000)}</span><span>{formatINR(50000)}+</span></div>
               </FilterGroup>
 
               <FilterGroup label={`Min rating · ${search.minRating.toFixed(1)}★`}>
@@ -158,7 +170,7 @@ function Marketplace() {
             <div className="flex items-center justify-between mb-6">
               <div className="text-sm text-muted-foreground">
                 <span className="text-foreground font-medium">{results.length}</span> creators
-                {search.city !== "all" && <> in <span className="text-foreground">{search.city}</span></>}
+                {search.city.trim() && <> in <span className="text-foreground">{search.city}</span></>}
               </div>
             </div>
 
@@ -187,7 +199,7 @@ function Marketplace() {
                           <p className="text-xs text-muted-foreground">{p.specialty}</p>
                         </div>
                         <div className="text-right shrink-0">
-                          <div className="font-display text-lg leading-none">${p.hourly}</div>
+                          <div className="font-display text-lg leading-none">{formatINR(p.hourly)}</div>
                           <div className="text-[10px] text-muted-foreground mt-0.5">/ hour</div>
                         </div>
                       </div>
