@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as MarketplaceRouteImport } from './routes/marketplace'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as CreatorsHandleRouteImport } from './routes/creators.$handle'
 
 const MarketplaceRoute = MarketplaceRouteImport.update({
   id: '/marketplace',
@@ -22,31 +23,40 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CreatorsHandleRoute = CreatorsHandleRouteImport.update({
+  id: '/creators/$handle',
+  path: '/creators/$handle',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/marketplace': typeof MarketplaceRoute
+  '/creators/$handle': typeof CreatorsHandleRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/marketplace': typeof MarketplaceRoute
+  '/creators/$handle': typeof CreatorsHandleRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/marketplace': typeof MarketplaceRoute
+  '/creators/$handle': typeof CreatorsHandleRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/marketplace'
+  fullPaths: '/' | '/marketplace' | '/creators/$handle'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/marketplace'
-  id: '__root__' | '/' | '/marketplace'
+  to: '/' | '/marketplace' | '/creators/$handle'
+  id: '__root__' | '/' | '/marketplace' | '/creators/$handle'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   MarketplaceRoute: typeof MarketplaceRoute
+  CreatorsHandleRoute: typeof CreatorsHandleRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -65,12 +75,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/creators/$handle': {
+      id: '/creators/$handle'
+      path: '/creators/$handle'
+      fullPath: '/creators/$handle'
+      preLoaderRoute: typeof CreatorsHandleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   MarketplaceRoute: MarketplaceRoute,
+  CreatorsHandleRoute: CreatorsHandleRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
