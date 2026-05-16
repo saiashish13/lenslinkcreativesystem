@@ -2,10 +2,12 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { zodValidator, fallback } from "@tanstack/zod-adapter";
 import { z } from "zod";
 import { useMemo } from "react";
-import { Search, MapPin, Star, SlidersHorizontal, X, ArrowUpRight } from "lucide-react";
+import { Search, MapPin, Star, SlidersHorizontal, X, ArrowUpRight, Heart } from "lucide-react";
 import { SiteNav } from "@/components/site-nav";
 import { PROFESSIONALS, INDIAN_LOCATIONS, type Category, type Availability } from "@/lib/professionals";
 import { formatINR } from "@/lib/format";
+import { useFavorites } from "@/hooks/use-customer-data";
+import { useAuth } from "@/hooks/use-auth";
 
 const searchSchema = z.object({
   q: fallback(z.string(), "").default(""),
@@ -30,6 +32,8 @@ export const Route = createFileRoute("/marketplace")({
 function Marketplace() {
   const search = Route.useSearch();
   const navigate = useNavigate({ from: Route.fullPath });
+  const { user } = useAuth();
+  const { isFavorite, toggle } = useFavorites();
 
   const update = (patch: Partial<typeof search>) =>
     navigate({ search: (prev: typeof search) => ({ ...prev, ...patch }), replace: true });
@@ -191,6 +195,15 @@ function Marketplace() {
                       <div className="absolute inset-0 bg-gradient-to-t from-card via-card/30 to-transparent" />
                       <span className="absolute top-3 left-3 text-[10px] uppercase tracking-widest px-2 py-1 rounded-md bg-background/70 backdrop-blur border border-border text-muted-foreground">{p.category}</span>
                       <span className="absolute top-3 right-3 text-[10px] px-2 py-1 rounded-md bg-primary/15 text-primary border border-primary/30 backdrop-blur capitalize">{p.availability.replace("-", " ")}</span>
+                      {user && (
+                        <button
+                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggle(p.handle); }}
+                          aria-label="Save creator"
+                          className="absolute bottom-3 right-3 h-9 w-9 grid place-items-center rounded-full bg-background/80 backdrop-blur border border-border hover:bg-background transition"
+                        >
+                          <Heart className={`h-4 w-4 ${isFavorite(p.handle) ? "fill-primary text-primary" : "text-foreground"}`} />
+                        </button>
+                      )}
                     </div>
                     <div className="p-5">
                       <div className="flex items-start justify-between gap-3">

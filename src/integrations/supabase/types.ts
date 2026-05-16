@@ -14,6 +14,72 @@ export type Database = {
   }
   public: {
     Tables: {
+      bookings: {
+        Row: {
+          budget_inr: number | null
+          category: string
+          city: string | null
+          created_at: string
+          customer_id: string
+          event_date: string | null
+          id: string
+          professional_handle: string
+          professional_name: string
+          requirements: string | null
+          status: Database["public"]["Enums"]["booking_status"]
+          updated_at: string
+        }
+        Insert: {
+          budget_inr?: number | null
+          category: string
+          city?: string | null
+          created_at?: string
+          customer_id: string
+          event_date?: string | null
+          id?: string
+          professional_handle: string
+          professional_name: string
+          requirements?: string | null
+          status?: Database["public"]["Enums"]["booking_status"]
+          updated_at?: string
+        }
+        Update: {
+          budget_inr?: number | null
+          category?: string
+          city?: string | null
+          created_at?: string
+          customer_id?: string
+          event_date?: string | null
+          id?: string
+          professional_handle?: string
+          professional_name?: string
+          requirements?: string | null
+          status?: Database["public"]["Enums"]["booking_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      favorites: {
+        Row: {
+          created_at: string
+          customer_id: string
+          id: string
+          professional_handle: string
+        }
+        Insert: {
+          created_at?: string
+          customer_id: string
+          id?: string
+          professional_handle: string
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string
+          id?: string
+          professional_handle?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -80,6 +146,12 @@ export type Database = {
     }
     Enums: {
       app_role: "customer" | "photographer" | "editor" | "admin"
+      booking_status:
+        | "pending"
+        | "confirmed"
+        | "in_progress"
+        | "completed"
+        | "cancelled"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -208,6 +280,13 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["customer", "photographer", "editor", "admin"],
+      booking_status: [
+        "pending",
+        "confirmed",
+        "in_progress",
+        "completed",
+        "cancelled",
+      ],
     },
   },
 } as const

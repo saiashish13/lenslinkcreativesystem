@@ -1,9 +1,13 @@
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { ArrowUpRight, Calendar, Camera, Check, Clock, MapPin, MessageSquare, Share2, Star, Verified } from "lucide-react";
+import { ArrowUpRight, Calendar, Camera, Check, Clock, Heart, MapPin, MessageSquare, Share2, Star, Verified } from "lucide-react";
 import { SiteNav } from "@/components/site-nav";
 import { getProfessional, PROFESSIONALS } from "@/lib/professionals";
 import { formatINR } from "@/lib/format";
+import { useAuth } from "@/hooks/use-auth";
+import { useFavorites } from "@/hooks/use-customer-data";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import work1 from "@/assets/work-1.jpg";
 import work2 from "@/assets/work-2.jpg";
 import work3 from "@/assets/work-3.jpg";
@@ -58,6 +62,32 @@ function CreatorProfile() {
   const [tab, setTab] = useState<"portfolio" | "services" | "reviews">("portfolio");
   const [selectedDay, setSelectedDay] = useState(1);
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
+  const [booking, setBooking] = useState(false);
+  const { user } = useAuth();
+  const { isFavorite, toggle } = useFavorites();
+  const navigate = useNavigate();
+
+  const handleBook = async () => {
+    if (!user) { navigate({ to: "/login" }); return; }
+    if (!selectedSlot) return;
+    setBooking(true);
+    const day = new Date();
+    day.setDate(day.getDate() + selectedDay);
+    const { error } = await supabase.from("bookings").insert({
+      customer_id: user.id,
+      professional_handle: pro.handle,
+      professional_name: pro.name,
+      category: pro.category,
+      city: pro.city,
+      event_date: day.toISOString().slice(0, 10),
+      budget_inr: pro.hourly,
+      requirements: `Requested time: ${selectedSlot}`,
+    });
+    setBooking(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Booking request sent");
+    navigate({ to: "/app" });
+  };
 
   const days = Array.from({ length: 7 }).map((_, i) => {
     const d = new Date();
@@ -98,6 +128,16 @@ function CreatorProfile() {
               </div>
             </div>
             <div className="flex gap-2">
+              {user && (
+                <button
+                  onClick={() => toggle(pro.handle)}
+                  className="inline-flex items-center gap-1.5 rounded-md border border-border px-4 py-2 text-sm hover:bg-secondary/40 transition"
+                  aria-label="Save"
+                >
+                  <Heart className={`h-4 w-4 ${isFavorite(pro.handle) ? "fill-primary text-primary" : ""}`} />
+                  {isFavorite(pro.handle) ? "Saved" : "Save"}
+                </button>
+              )}
               <button className="inline-flex items-center gap-1.5 rounded-md border border-border px-4 py-2 text-sm hover:bg-secondary/40 transition">
                 <Share2 className="h-4 w-4" /> Share
               </button>
@@ -231,10 +271,11 @@ function CreatorProfile() {
                 </div>
 
                 <button
-                  disabled={!selectedSlot}
+                  disabled={!selectedSlot || booking}
+                  onClick={handleBook}
                   className="mt-5 inline-flex w-full items-center justify-center gap-1.5 rounded-md bg-[image:var(--gradient-gold)] text-primary-foreground px-3 py-2.5 text-sm font-medium hover:opacity-90 transition disabled:opacity-40 disabled:cursor-not-allowed"
                 >
-                  {selectedSlot ? `Book ${days[selectedDay].full} · ${selectedSlot}` : "Select a time"}
+                  {booking ? "Booking…" : selectedSlot ? `Book ${days[selectedDay].full} · ${selectedSlot}` : "Select a time"}
                   <ArrowUpRight className="h-4 w-4" />
                 </button>
 
