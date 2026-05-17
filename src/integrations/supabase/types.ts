@@ -95,6 +95,51 @@ export type Database = {
         }
         Relationships: []
       }
+      editor_assignments: {
+        Row: {
+          booking_id: string | null
+          brief: string | null
+          budget_inr: number | null
+          category: string | null
+          created_at: string
+          creator_user_id: string
+          deadline: string | null
+          editor_user_id: string | null
+          id: string
+          status: Database["public"]["Enums"]["editor_status"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          booking_id?: string | null
+          brief?: string | null
+          budget_inr?: number | null
+          category?: string | null
+          created_at?: string
+          creator_user_id: string
+          deadline?: string | null
+          editor_user_id?: string | null
+          id?: string
+          status?: Database["public"]["Enums"]["editor_status"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          booking_id?: string | null
+          brief?: string | null
+          budget_inr?: number | null
+          category?: string | null
+          created_at?: string
+          creator_user_id?: string
+          deadline?: string | null
+          editor_user_id?: string | null
+          id?: string
+          status?: Database["public"]["Enums"]["editor_status"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       favorites: {
         Row: {
           created_at: string
@@ -215,6 +260,82 @@ export type Database = {
         }
         Relationships: []
       }
+      project_files: {
+        Row: {
+          assignment_id: string
+          created_at: string
+          file_url: string
+          id: string
+          kind: Database["public"]["Enums"]["file_kind"]
+          note: string | null
+          uploaded_by: string
+          version: number
+        }
+        Insert: {
+          assignment_id: string
+          created_at?: string
+          file_url: string
+          id?: string
+          kind?: Database["public"]["Enums"]["file_kind"]
+          note?: string | null
+          uploaded_by: string
+          version?: number
+        }
+        Update: {
+          assignment_id?: string
+          created_at?: string
+          file_url?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["file_kind"]
+          note?: string | null
+          uploaded_by?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_files_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "editor_assignments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_revisions: {
+        Row: {
+          assignment_id: string
+          author_id: string
+          created_at: string
+          id: string
+          message: string
+          resolved: boolean
+        }
+        Insert: {
+          assignment_id: string
+          author_id: string
+          created_at?: string
+          id?: string
+          message: string
+          resolved?: boolean
+        }
+        Update: {
+          assignment_id?: string
+          author_id?: string
+          created_at?: string
+          id?: string
+          message?: string
+          resolved?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_revisions_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "editor_assignments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -257,6 +378,13 @@ export type Database = {
         | "in_progress"
         | "completed"
         | "cancelled"
+      editor_status:
+        | "open"
+        | "in_progress"
+        | "in_review"
+        | "delivered"
+        | "cancelled"
+      file_kind: "source" | "draft" | "revision" | "delivery"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -392,6 +520,14 @@ export const Constants = {
         "completed",
         "cancelled",
       ],
+      editor_status: [
+        "open",
+        "in_progress",
+        "in_review",
+        "delivered",
+        "cancelled",
+      ],
+      file_kind: ["source", "draft", "revision", "delivery"],
     },
   },
 } as const
