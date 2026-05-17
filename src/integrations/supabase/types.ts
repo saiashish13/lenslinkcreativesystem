@@ -14,12 +14,46 @@ export type Database = {
   }
   public: {
     Tables: {
+      availability_slots: {
+        Row: {
+          created_at: string
+          creator_id: string
+          end_time: string
+          id: string
+          is_booked: boolean
+          note: string | null
+          slot_date: string
+          start_time: string
+        }
+        Insert: {
+          created_at?: string
+          creator_id: string
+          end_time?: string
+          id?: string
+          is_booked?: boolean
+          note?: string | null
+          slot_date: string
+          start_time?: string
+        }
+        Update: {
+          created_at?: string
+          creator_id?: string
+          end_time?: string
+          id?: string
+          is_booked?: boolean
+          note?: string | null
+          slot_date?: string
+          start_time?: string
+        }
+        Relationships: []
+      }
       bookings: {
         Row: {
           budget_inr: number | null
           category: string
           city: string | null
           created_at: string
+          creator_user_id: string | null
           customer_id: string
           event_date: string | null
           id: string
@@ -34,6 +68,7 @@ export type Database = {
           category: string
           city?: string | null
           created_at?: string
+          creator_user_id?: string | null
           customer_id: string
           event_date?: string | null
           id?: string
@@ -48,6 +83,7 @@ export type Database = {
           category?: string
           city?: string | null
           created_at?: string
+          creator_user_id?: string | null
           customer_id?: string
           event_date?: string | null
           id?: string
@@ -77,6 +113,75 @@ export type Database = {
           customer_id?: string
           id?: string
           professional_handle?: string
+        }
+        Relationships: []
+      }
+      portfolio_items: {
+        Row: {
+          created_at: string
+          creator_id: string
+          description: string | null
+          id: string
+          media_url: string
+          tags: string[] | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          creator_id: string
+          description?: string | null
+          id?: string
+          media_url: string
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          creator_id?: string
+          description?: string | null
+          id?: string
+          media_url?: string
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      pricing_packages: {
+        Row: {
+          created_at: string
+          creator_id: string
+          delivery_days: number
+          description: string | null
+          id: string
+          is_active: boolean
+          price_inr: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          creator_id: string
+          delivery_days?: number
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          price_inr: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          creator_id?: string
+          delivery_days?: number
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          price_inr?: number
+          title?: string
+          updated_at?: string
         }
         Relationships: []
       }
