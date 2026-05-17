@@ -15,6 +15,7 @@ import { formatINR } from "@/lib/format";
 import { generateCaption, suggestPricing } from "@/lib/creator-ai.functions";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useCreatorAssignments } from "@/hooks/use-editor-data";
 
 export const Route = createFileRoute("/_authenticated/pro")({
   head: () => ({ meta: [{ title: "Creator dashboard — LensLink AI" }] }),
@@ -37,20 +38,101 @@ function ProDash() {
       subtitle={`Welcome back${user?.email ? `, ${user.email.split("@")[0]}` : ""}. Manage bookings, availability, and your portfolio.`}
     >
       <Tabs defaultValue="bookings">
-        <TabsList className="grid grid-cols-2 md:grid-cols-5 w-full bg-card/60">
+        <TabsList className="grid grid-cols-2 md:grid-cols-6 w-full bg-card/60">
           <TabsTrigger value="bookings">Bookings</TabsTrigger>
           <TabsTrigger value="availability">Availability</TabsTrigger>
           <TabsTrigger value="portfolio">Portfolio</TabsTrigger>
           <TabsTrigger value="packages">Packages</TabsTrigger>
+          <TabsTrigger value="editors">Editors</TabsTrigger>
           <TabsTrigger value="ai">AI tools</TabsTrigger>
         </TabsList>
         <TabsContent value="bookings" className="mt-6"><BookingsTab /></TabsContent>
         <TabsContent value="availability" className="mt-6"><AvailabilityTab /></TabsContent>
         <TabsContent value="portfolio" className="mt-6"><PortfolioTab /></TabsContent>
         <TabsContent value="packages" className="mt-6"><PackagesTab /></TabsContent>
+        <TabsContent value="editors" className="mt-6"><EditorHandoffTab /></TabsContent>
         <TabsContent value="ai" className="mt-6"><AIToolsTab /></TabsContent>
       </Tabs>
     </DashShell>
+  );
+}
+
+function EditorHandoffTab() {
+  const { user } = useAuth();
+  const { items, loading, refresh } = useCreatorAssignments();
+  const [title, setTitle] = useState("");
+  const [brief, setBrief] = useState("");
+  const [category, setCategory] = useState("Wedding edit");
+  const [deadline, setDeadline] = useState("");
+  const [budget, setBudget] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  const create = async () => {
+    if (!user || !title.trim()) return;
+    setSaving(true);
+    const { error } = await supabase.from("editor_assignments").insert({
+      creator_user_id: user.id,
+      title: title.trim(),
+      brief: brief.trim() || null,
+      category,
+      deadline: deadline || null,
+      budget_inr: budget ? Number(budget) : null,
+    });
+    setSaving(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Posted to editor pool");
+    setTitle(""); setBrief(""); setDeadline(""); setBudget("");
+    refresh();
+  };
+
+  const cancel = async (id: string) => {
+    const { error } = await supabase.from("editor_assignments").update({ status: "cancelled" }).eq("id", id);
+    if (error) { toast.error(error.message); return; }
+    refresh();
+  };
+
+  return (
+    <div className="grid lg:grid-cols-[1fr_1.2fr] gap-6">
+      <div className="rounded-xl border border-border bg-card/60 p-6 space-y-3">
+        <div className="font-medium">Send a project to the editor pool</div>
+        <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Project title (e.g. Sharma wedding teaser)" className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+        <textarea value={brief} onChange={(e) => setBrief(e.target.value)} placeholder="Creative brief, mood, deliverables, references…" rows={4} className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+        <div className="grid grid-cols-2 gap-3">
+          <select value={category} onChange={(e) => setCategory(e.target.value)} className="rounded-md border border-border bg-background px-3 py-2 text-sm">
+            {["Wedding edit","Reel / short","Color grade","Photo retouch","Album design","Documentary"].map((c) => <option key={c}>{c}</option>)}
+          </select>
+          <input type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} className="rounded-md border border-border bg-background px-3 py-2 text-sm" />
+        </div>
+        <input type="number" inputMode="numeric" value={budget} onChange={(e) => setBudget(e.target.value)} placeholder="Budget in INR (optional)" className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+        <button onClick={create} disabled={saving || !title.trim()} className="inline-flex items-center gap-2 rounded-md bg-[image:var(--gradient-gold)] text-primary-foreground px-4 py-2 text-sm font-medium disabled:opacity-50">
+          {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />} Post to pool
+        </button>
+      </div>
+      <div className="space-y-3">
+        <div className="text-sm text-muted-foreground">Your editor projects</div>
+        {loading ? <div className="text-muted-foreground">Loading…</div> : items.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-border p-6 text-sm text-muted-foreground">No projects yet — post one to find an editor.</div>
+        ) : items.map((a) => (
+          <div key={a.id} className="rounded-xl border border-border bg-card/60 p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <div className="font-medium">{a.title}</div>
+                <div className="text-xs text-muted-foreground mt-1">{a.category} · {a.deadline ? `Due ${a.deadline}` : "No deadline"} {a.budget_inr ? `· ${formatINR(a.budget_inr)}` : ""}</div>
+              </div>
+              <span className={`text-xs rounded-full border px-2 py-0.5 ${a.editor_user_id ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30" : "bg-amber-500/15 text-amber-400 border-amber-500/30"}`}>
+                {a.status}{a.editor_user_id ? " · claimed" : " · unclaimed"}
+              </span>
+            </div>
+            {a.brief && <p className="text-sm text-muted-foreground mt-2 line-clamp-2">{a.brief}</p>}
+            {a.status !== "cancelled" && a.status !== "delivered" && (
+              <button onClick={() => cancel(a.id)} className="mt-3 text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1">
+                <X className="h-3 w-3" /> Cancel
+              </button>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 
