@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
-import { CalendarPlus, Check, ImagePlus, IndianRupee, Loader2, Plus, Sparkles, Trash2, Wand2, X } from "lucide-react";
+import { CalendarPlus, Check, ImagePlus, IndianRupee, Loader2, MessageSquare, Plus, Sparkles, Trash2, Wand2, X } from "lucide-react";
 import { DashShell } from "@/components/dash-shell";
 import { useAuth } from "@/hooks/use-auth";
 import {
@@ -16,6 +16,8 @@ import { generateCaption, suggestPricing } from "@/lib/creator-ai.functions";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useCreatorAssignments } from "@/hooks/use-editor-data";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { ChatPanel } from "@/components/chat-panel";
 
 export const Route = createFileRoute("/_authenticated/pro")({
   head: () => ({ meta: [{ title: "Creator dashboard — LensLink AI" }] }),
@@ -186,6 +188,19 @@ function BookingsTab() {
                 Mark complete
               </button>
             )}
+            <Dialog>
+              <DialogTrigger asChild>
+                <button className="inline-flex items-center gap-1 text-xs rounded-md border border-border px-3 py-1.5 hover:bg-card text-muted-foreground hover:text-foreground">
+                  <MessageSquare className="h-3 w-3" /> Message
+                </button>
+              </DialogTrigger>
+              <DialogContent className="max-w-lg">
+                <DialogHeader>
+                  <DialogTitle>Chat with customer</DialogTitle>
+                </DialogHeader>
+                <ChatPanel bookingId={b.id} />
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
       ))}

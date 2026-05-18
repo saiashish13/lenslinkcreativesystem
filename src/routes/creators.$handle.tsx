@@ -6,6 +6,7 @@ import { getProfessional, PROFESSIONALS } from "@/lib/professionals";
 import { formatINR } from "@/lib/format";
 import { useAuth } from "@/hooks/use-auth";
 import { useFavorites } from "@/hooks/use-customer-data";
+import { useProfessionalReviews } from "@/hooks/use-messaging";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import work1 from "@/assets/work-1.jpg";
@@ -66,6 +67,7 @@ function CreatorProfile() {
   const { user } = useAuth();
   const { isFavorite, toggle } = useFavorites();
   const navigate = useNavigate();
+  const { data: dbReviews } = useProfessionalReviews(pro.handle);
 
   const handleBook = async () => {
     if (!user) { navigate({ to: "/login" }); return; }
@@ -209,12 +211,15 @@ function CreatorProfile() {
 
               {tab === "reviews" && (
                 <div className="space-y-4">
-                  {[
+                  {(dbReviews && dbReviews.length > 0
+                    ? dbReviews.map((r) => ({ n: "Verified client", r: r.rating, t: r.comment ?? "" }))
+                    : [
                     { n: "Hannah W.", r: 5, t: "An absolute professional. Delivered ahead of schedule with stunning results — already booked the next campaign." },
                     { n: "Marcus T.", r: 5, t: "Effortless to work with on set, and the final edit went beyond what we briefed. Worth every dollar." },
                     { n: "Studio Onyx", r: 4.8, t: "Strong creative direction. Communication was excellent throughout pre-pro and delivery." },
-                  ].map((r) => (
-                    <div key={r.n} className="rounded-xl border border-border bg-card p-5">
+                    ]
+                  ).map((r, idx) => (
+                    <div key={idx} className="rounded-xl border border-border bg-card p-5">
                       <div className="flex items-center justify-between">
                         <div className="font-medium">{r.n}</div>
                         <div className="inline-flex items-center gap-1 text-sm"><Star className="h-3.5 w-3.5 fill-primary text-primary" /> {r.r}</div>

@@ -1,6 +1,7 @@
 import { Link, useRouter } from "@tanstack/react-router";
 import { ArrowUpRight, Camera, LogOut } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { NotificationBell } from "@/components/notification-bell";
 
 export function SiteNav() {
   const { user, roles, signOut } = useAuth();
@@ -32,6 +33,7 @@ export function SiteNav() {
         <div className="flex items-center gap-2">
           {user ? (
             <>
+              <NotificationBell />
               <Link to={dashHref} className="hidden sm:inline text-sm text-muted-foreground hover:text-foreground px-3 py-2">Dashboard</Link>
               <button
                 onClick={async () => { await signOut(); router.navigate({ to: "/" }); }}

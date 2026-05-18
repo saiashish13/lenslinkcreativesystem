@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
-import { CalendarCheck, Heart, MessagesSquare, Sparkles, MapPin, Star, Loader2, ArrowUpRight, X } from "lucide-react";
+import { CalendarCheck, Heart, MessagesSquare, Sparkles, MapPin, Star, Loader2, ArrowUpRight, X, MessageSquare } from "lucide-react";
 import { DashShell } from "@/components/dash-shell";
 import { useAuth } from "@/hooks/use-auth";
 import { useBookings, useFavorites } from "@/hooks/use-customer-data";
@@ -10,6 +10,11 @@ import { formatINR } from "@/lib/format";
 import { recommendCreators } from "@/lib/recommend.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { ChatPanel } from "@/components/chat-panel";
+import { useSubmitReview, useMyReviews } from "@/hooks/use-messaging";
 
 export const Route = createFileRoute("/_authenticated/app")({
   head: () => ({ meta: [{ title: "Dashboard — LensLink AI" }] }),
@@ -31,6 +36,8 @@ function CustomerDash() {
   const favorites = favHandles.map(getProfessional).filter(Boolean) as ReturnType<typeof getProfessional>[];
 
   const upcoming = bookings.filter((b) => b.status !== "completed" && b.status !== "cancelled");
+  const { data: myReviews } = useMyReviews();
+  const reviewedSet = new Set((myReviews ?? []).map((r) => r.booking_id));
 
   const cancel = async (id: string) => {
     const { error } = await supabase.from("bookings").update({ status: "cancelled" }).eq("id", id);
@@ -95,9 +102,22 @@ function CustomerDash() {
                   <span>{b.budget_inr ? `${formatINR(b.budget_inr)} budget` : ""}</span>
                 </div>
                 {b.status !== "cancelled" && b.status !== "completed" && (
-                  <button onClick={() => cancel(b.id)} className="mt-3 text-xs text-muted-foreground hover:text-destructive inline-flex items-center gap-1">
-                    <X className="h-3 w-3" /> Cancel booking
-                  </button>
+                  <div className="mt-3 flex items-center gap-3">
+                    <ChatDialog bookingId={b.id} title={`Chat with ${b.professional_name}`} />
+                    <button onClick={() => cancel(b.id)} className="text-xs text-muted-foreground hover:text-destructive inline-flex items-center gap-1">
+                      <X className="h-3 w-3" /> Cancel
+                    </button>
+                  </div>
+                )}
+                {b.status === "completed" && !reviewedSet.has(b.id) && (
+                  <div className="mt-3">
+                    <ReviewDialog bookingId={b.id} handle={b.professional_handle} name={b.professional_name} />
+                  </div>
+                )}
+                {b.status === "completed" && reviewedSet.has(b.id) && (
+                  <div className="mt-3 text-xs text-muted-foreground inline-flex items-center gap-1">
+                    <Star className="h-3 w-3 fill-primary text-primary" /> Review submitted
+                  </div>
                 )}
               </div>
             ))}
@@ -137,6 +157,75 @@ function CustomerDash() {
       {/* AI recommendations */}
       <AIPanel />
     </DashShell>
+  );
+}
+
+function ChatDialog({ bookingId, title }: { bookingId: string; title: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <button className="text-xs text-muted-foreground hover:text-primary inline-flex items-center gap-1">
+          <MessageSquare className="h-3 w-3" /> Message
+        </button>
+      </DialogTrigger>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+        </DialogHeader>
+        <ChatPanel bookingId={bookingId} />
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function ReviewDialog({ bookingId, handle, name }: { bookingId: string; handle: string; name: string }) {
+  const [open, setOpen] = useState(false);
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState("");
+  const submit = useSubmitReview();
+
+  const save = () => {
+    submit.mutate(
+      { bookingId, handle, rating, comment },
+      {
+        onSuccess: () => { toast.success("Thanks for your review"); setOpen(false); },
+        onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
+      },
+    );
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <button className="text-xs text-primary inline-flex items-center gap-1 hover:underline">
+          <Star className="h-3 w-3" /> Leave a review
+        </button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Review {name}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div className="flex items-center gap-1">
+            {[1, 2, 3, 4, 5].map((n) => (
+              <button key={n} onClick={() => setRating(n)} aria-label={`${n} stars`}>
+                <Star className={`h-7 w-7 ${n <= rating ? "fill-primary text-primary" : "text-muted-foreground"}`} />
+              </button>
+            ))}
+          </div>
+          <Textarea
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+            placeholder="Share details about your experience…"
+            rows={4}
+          />
+          <Button onClick={save} disabled={submit.isPending} className="w-full">
+            {submit.isPending ? "Submitting…" : "Submit review"}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
