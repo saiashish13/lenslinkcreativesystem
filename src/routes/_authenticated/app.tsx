@@ -232,6 +232,11 @@ function ReviewDialog({ bookingId, handle, name }: { bookingId: string; handle: 
 function AIPanel() {
   const recommend = useServerFn(recommendCreators);
   const [brief, setBrief] = useState("");
+  const [eventType, setEventType] = useState("");
+  const [style, setStyle] = useState("");
+  const [budget, setBudget] = useState("");
+  const [location, setLocation] = useState("");
+  const [category, setCategory] = useState<"" | "photographer" | "videographer" | "editor">("");
   const [loading, setLoading] = useState(false);
   const [picks, setPicks] = useState<{ handle: string; reason: string }[]>([]);
 
@@ -242,6 +247,13 @@ function AIPanel() {
       const result = await recommend({
         data: {
           brief,
+          filters: {
+            ...(eventType && { eventType }),
+            ...(style && { style }),
+            ...(budget && { budgetInr: Number(budget) }),
+            ...(location && { location }),
+            ...(category && { category }),
+          },
           professionals: PROFESSIONALS.map((p) => ({
             handle: p.handle, name: p.name, category: p.category, specialty: p.specialty,
             city: p.city, hourly: p.hourly, rating: p.rating, languages: p.languages,
@@ -265,14 +277,27 @@ function AIPanel() {
           <span className="text-xs uppercase tracking-widest">AI recommendations</span>
         </div>
         <h2 className="font-display text-2xl">Describe your shoot — we'll match the right creators</h2>
-        <p className="text-sm text-muted-foreground mt-1">e.g. "2-day Hindu wedding in Udaipur, cinematic style, ₹2L budget"</p>
+        <p className="text-sm text-muted-foreground mt-1">Tuned to your filters, brief, and past bookings.</p>
 
-        <div className="mt-4 flex flex-col sm:flex-row gap-2">
+        <div className="mt-4 grid grid-cols-2 md:grid-cols-5 gap-2">
+          <input value={eventType} onChange={(e) => setEventType(e.target.value)} placeholder="Event type" className="rounded-md bg-background border border-border px-3 py-2 text-sm" maxLength={80} />
+          <input value={style} onChange={(e) => setStyle(e.target.value)} placeholder="Style" className="rounded-md bg-background border border-border px-3 py-2 text-sm" maxLength={120} />
+          <input value={budget} onChange={(e) => setBudget(e.target.value.replace(/\D/g, ""))} placeholder="Budget ₹" inputMode="numeric" className="rounded-md bg-background border border-border px-3 py-2 text-sm" />
+          <input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Location" className="rounded-md bg-background border border-border px-3 py-2 text-sm" maxLength={80} />
+          <select value={category} onChange={(e) => setCategory(e.target.value as typeof category)} className="rounded-md bg-background border border-border px-3 py-2 text-sm">
+            <option value="">Any role</option>
+            <option value="photographer">Photographer</option>
+            <option value="videographer">Videographer</option>
+            <option value="editor">Editor</option>
+          </select>
+        </div>
+
+        <div className="mt-3 flex flex-col sm:flex-row gap-2">
           <input
             value={brief}
             onChange={(e) => setBrief(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && run()}
-            placeholder="Brief your project…"
+            placeholder='Brief your project — e.g. "2-day Hindu wedding, candid + cinematic"'
             className="flex-1 rounded-md bg-background border border-border px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
             maxLength={800}
           />
