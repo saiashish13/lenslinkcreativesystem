@@ -1,13 +1,16 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { zodValidator, fallback } from "@tanstack/zod-adapter";
 import { z } from "zod";
-import { useMemo } from "react";
-import { Search, MapPin, Star, SlidersHorizontal, X, ArrowUpRight, Heart } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Search, MapPin, Star, SlidersHorizontal, X, ArrowUpRight, Heart, Sparkles, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { SiteNav } from "@/components/site-nav";
 import { PROFESSIONALS, INDIAN_LOCATIONS, type Category, type Availability } from "@/lib/professionals";
 import { formatINR } from "@/lib/format";
 import { useFavorites } from "@/hooks/use-customer-data";
 import { useAuth } from "@/hooks/use-auth";
+import { parseSearchQuery } from "@/lib/search-ai.functions";
 
 const searchSchema = z.object({
   q: fallback(z.string(), "").default(""),
@@ -34,12 +37,29 @@ function Marketplace() {
   const navigate = useNavigate({ from: Route.fullPath });
   const { user } = useAuth();
   const { isFavorite, toggle } = useFavorites();
+  const parseAi = useServerFn(parseSearchQuery);
+  const [aiQ, setAiQ] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
 
   const update = (patch: Partial<typeof search>) =>
     navigate({ search: (prev: typeof search) => ({ ...prev, ...patch }), replace: true });
 
   const reset = () =>
     navigate({ search: { q: "", city: "", category: "all", availability: "any", minRating: 0, maxBudget: 50000 } });
+
+  const runAi = async () => {
+    if (aiQ.trim().length < 2) return;
+    setAiLoading(true);
+    try {
+      const f = await parseAi({ data: { query: aiQ } });
+      navigate({ search: { ...f } });
+      toast.success("Filters tuned by AI");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "AI search failed");
+    } finally {
+      setAiLoading(false);
+    }
+  };
 
   const results = useMemo(() => {
     const cityQuery = search.city.trim().toLowerCase();
@@ -69,14 +89,35 @@ function Marketplace() {
           <p className="text-xs uppercase tracking-[0.2em] text-primary mb-3">Marketplace</p>
           <h1 className="font-display text-4xl sm:text-5xl tracking-tight max-w-3xl">Find the right creator for your next shoot.</h1>
           <p className="mt-3 text-muted-foreground max-w-xl">12,000+ verified photographers, videographers and editors across India. Filter, compare, book in minutes.</p>
-          <div className="mt-8 relative max-w-xl">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <input
-              value={search.q}
-              onChange={(e) => update({ q: e.target.value })}
-              placeholder="Try ‘wedding in Udaipur’ or ‘product editor in Bengaluru’"
-              className="w-full pl-10 pr-4 py-3 rounded-lg bg-card border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
-            />
+          <div className="mt-8 max-w-2xl space-y-2">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <input
+                value={search.q}
+                onChange={(e) => update({ q: e.target.value })}
+                placeholder="Keyword search — name, specialty, handle"
+                className="w-full pl-10 pr-4 py-3 rounded-lg bg-card border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+              />
+            </div>
+            <div className="relative">
+              <Sparkles className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary" />
+              <input
+                value={aiQ}
+                onChange={(e) => setAiQ(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && runAi()}
+                placeholder="Ask in plain English — “top wedding videographer in Udaipur under ₹25k”"
+                className="w-full pl-10 pr-28 py-3 rounded-lg bg-card border border-primary/30 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+                maxLength={300}
+              />
+              <button
+                onClick={runAi}
+                disabled={aiLoading || aiQ.trim().length < 2}
+                className="absolute right-1.5 top-1/2 -translate-y-1/2 inline-flex items-center gap-1 rounded-md bg-[image:var(--gradient-gold)] text-primary-foreground px-3 py-1.5 text-xs font-medium disabled:opacity-40"
+              >
+                {aiLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+                AI search
+              </button>
+            </div>
           </div>
         </div>
       </section>
