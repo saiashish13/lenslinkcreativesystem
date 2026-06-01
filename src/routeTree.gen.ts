@@ -20,6 +20,7 @@ import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authentic
 import { Route as AuthenticatedEditorRouteImport } from './routes/_authenticated/editor'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as ApiPublicCronRefreshPlacesRouteImport } from './routes/api/public/cron/refresh-places'
 
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
@@ -75,6 +76,12 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const ApiPublicCronRefreshPlacesRoute =
+  ApiPublicCronRefreshPlacesRouteImport.update({
+    id: '/api/public/cron/refresh-places',
+    path: '/api/public/cron/refresh-places',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -87,6 +94,7 @@ export interface FileRoutesByFullPath {
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/pro': typeof AuthenticatedProRoute
   '/creators/$handle': typeof CreatorsHandleRoute
+  '/api/public/cron/refresh-places': typeof ApiPublicCronRefreshPlacesRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -99,6 +107,7 @@ export interface FileRoutesByTo {
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/pro': typeof AuthenticatedProRoute
   '/creators/$handle': typeof CreatorsHandleRoute
+  '/api/public/cron/refresh-places': typeof ApiPublicCronRefreshPlacesRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -113,6 +122,7 @@ export interface FileRoutesById {
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/pro': typeof AuthenticatedProRoute
   '/creators/$handle': typeof CreatorsHandleRoute
+  '/api/public/cron/refresh-places': typeof ApiPublicCronRefreshPlacesRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -127,6 +137,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/pro'
     | '/creators/$handle'
+    | '/api/public/cron/refresh-places'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -139,6 +150,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/pro'
     | '/creators/$handle'
+    | '/api/public/cron/refresh-places'
   id:
     | '__root__'
     | '/'
@@ -152,6 +164,7 @@ export interface FileRouteTypes {
     | '/_authenticated/onboarding'
     | '/_authenticated/pro'
     | '/creators/$handle'
+    | '/api/public/cron/refresh-places'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -161,6 +174,7 @@ export interface RootRouteChildren {
   MarketplaceRoute: typeof MarketplaceRoute
   SignupRoute: typeof SignupRoute
   CreatorsHandleRoute: typeof CreatorsHandleRoute
+  ApiPublicCronRefreshPlacesRoute: typeof ApiPublicCronRefreshPlacesRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -242,6 +256,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/api/public/cron/refresh-places': {
+      id: '/api/public/cron/refresh-places'
+      path: '/api/public/cron/refresh-places'
+      fullPath: '/api/public/cron/refresh-places'
+      preLoaderRoute: typeof ApiPublicCronRefreshPlacesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -272,7 +293,18 @@ const rootRouteChildren: RootRouteChildren = {
   MarketplaceRoute: MarketplaceRoute,
   SignupRoute: SignupRoute,
   CreatorsHandleRoute: CreatorsHandleRoute,
+  ApiPublicCronRefreshPlacesRoute: ApiPublicCronRefreshPlacesRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
