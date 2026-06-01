@@ -278,7 +278,7 @@ export const refreshListingFromPlaces = createServerFn({ method: "POST" })
       },
     });
     if (!res.ok) return { refreshed: false };
-    const p = await res.json() as PlacesResponse["places"] extends Array<infer T> ? T : never;
+    const p = (await res.json()) as NonNullable<PlacesResponse["places"]>[number];
     if (!p?.id) return { refreshed: false };
 
     await supabaseAdmin

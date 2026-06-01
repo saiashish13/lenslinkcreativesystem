@@ -23,7 +23,7 @@ export function useFavorites() {
   const refresh = useCallback(async () => {
     if (!user) { setHandles([]); setLoading(false); return; }
     const { data } = await supabase.from("favorites").select("professional_handle").eq("customer_id", user.id);
-    setHandles((data ?? []).map((r) => r.professional_handle));
+    setHandles((data ?? []).map((r) => r.professional_handle).filter((h): h is string => !!h));
     setLoading(false);
   }, [user]);
 
