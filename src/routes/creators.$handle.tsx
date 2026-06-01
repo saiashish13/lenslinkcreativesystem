@@ -1,329 +1,204 @@
-import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
-import { ArrowUpRight, Calendar, Camera, Check, Clock, Heart, MapPin, MessageSquare, Share2, Star, Verified } from "lucide-react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
+import { useEffect, useState } from "react";
+import { ArrowUpRight, MapPin, Star, ShieldCheck, Globe, Phone, Instagram, Loader2, AlertCircle } from "lucide-react";
 import { SiteNav } from "@/components/site-nav";
-import { getProfessional, PROFESSIONALS } from "@/lib/professionals";
+import { getListingBySlug } from "@/lib/listings.functions";
 import { formatINR } from "@/lib/format";
 import { useAuth } from "@/hooks/use-auth";
-import { useFavorites } from "@/hooks/use-customer-data";
-import { useProfessionalReviews } from "@/hooks/use-messaging";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import work1 from "@/assets/work-1.jpg";
-import work2 from "@/assets/work-2.jpg";
-import work3 from "@/assets/work-3.jpg";
-import work4 from "@/assets/work-4.jpg";
-
-const PORTFOLIO = [work1, work2, work3, work4, work2, work3];
 
 export const Route = createFileRoute("/creators/$handle")({
-  loader: ({ params }) => {
-    const pro = getProfessional(params.handle);
-    if (!pro) throw notFound();
-    return { pro };
-  },
-  head: ({ loaderData }) => ({
-    meta: loaderData
-      ? [
-          { title: `${loaderData.pro.name} — ${loaderData.pro.specialty} · LensLink AI` },
-          { name: "description", content: `Book ${loaderData.pro.name}, ${loaderData.pro.specialty} based in ${loaderData.pro.city}. ${loaderData.pro.rating}★ from ${loaderData.pro.reviews} clients.` },
-          { property: "og:title", content: `${loaderData.pro.name} on LensLink AI` },
-          { property: "og:image", content: loaderData.pro.image },
-        ]
-      : [],
-  }),
-  notFoundComponent: () => (
-    <main className="min-h-screen">
-      <SiteNav />
-      <div className="max-w-3xl mx-auto pt-40 px-6 text-center">
-        <h1 className="font-display text-4xl">Creator not found</h1>
-        <p className="text-muted-foreground mt-3">This profile may have moved or been removed.</p>
-        <Link to="/marketplace" className="mt-6 inline-flex items-center gap-1 rounded-md bg-[image:var(--gradient-gold)] text-primary-foreground px-4 py-2 text-sm font-medium">
-          Back to marketplace <ArrowUpRight className="h-4 w-4" />
-        </Link>
-      </div>
-    </main>
-  ),
-  errorComponent: ({ error }) => (
-    <main className="min-h-screen pt-40 px-6 text-center">
-      <p className="text-destructive">{error.message}</p>
-    </main>
-  ),
   component: CreatorProfile,
+  head: ({ params }) => ({
+    meta: [
+      { title: `${params.handle} — creator profile` },
+      { name: "description", content: `Profile, portfolio and contact details for ${params.handle}.` },
+    ],
+  }),
 });
 
-const SERVICES = [
-  { name: "Half-day shoot", duration: "4 hours", priceMult: 4, includes: ["On-location shoot", "Edited gallery (40+ images)", "Commercial license"] },
-  { name: "Full-day shoot", duration: "8 hours", priceMult: 7.5, includes: ["Full coverage", "Edited gallery (100+ images)", "Same-week delivery", "Commercial license"] },
-  { name: "Editorial campaign", duration: "2 days", priceMult: 14, includes: ["Pre-production", "Studio + on-location", "Final retouching", "Extended license"] },
-];
+type Data = Awaited<ReturnType<typeof getListingBySlug>>;
 
 function CreatorProfile() {
-  const { pro } = Route.useLoaderData();
-  const [tab, setTab] = useState<"portfolio" | "services" | "reviews">("portfolio");
-  const [selectedDay, setSelectedDay] = useState(1);
-  const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
-  const [booking, setBooking] = useState(false);
+  const { handle } = Route.useParams();
+  const fetchListing = useServerFn(getListingBySlug);
+  const [data, setData] = useState<Data | null>(null);
+  const [loading, setLoading] = useState(true);
   const { user } = useAuth();
-  const { isFavorite, toggle } = useFavorites();
   const navigate = useNavigate();
-  const { data: dbReviews } = useProfessionalReviews(pro.handle);
+  const [booking, setBooking] = useState(false);
 
-  const handleBook = async () => {
+  useEffect(() => {
+    setLoading(true);
+    fetchListing({ data: { slug: handle } }).then((d) => setData(d)).finally(() => setLoading(false));
+  }, [handle, fetchListing]);
+
+  if (loading) {
+    return (
+      <main className="min-h-screen"><SiteNav />
+        <div className="pt-40 grid place-items-center"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
+      </main>
+    );
+  }
+
+  if (!data?.listing) {
+    return (
+      <main className="min-h-screen"><SiteNav />
+        <div className="max-w-2xl mx-auto pt-40 px-6 text-center">
+          <h1 className="font-display text-3xl">Profile not found</h1>
+          <p className="text-muted-foreground mt-3">This listing may have been removed.</p>
+          <Link to="/marketplace" className="mt-6 inline-flex items-center gap-1 rounded-md bg-[image:var(--gradient-gold)] text-primary-foreground px-4 py-2 text-sm">Back to marketplace <ArrowUpRight className="h-4 w-4" /></Link>
+        </div>
+      </main>
+    );
+  }
+
+  const l = data.listing;
+  const unclaimed = !l.owner_user_id;
+
+  const requestQuote = async () => {
     if (!user) { navigate({ to: "/login" }); return; }
-    if (!selectedSlot) return;
+    if (unclaimed) { toast.error("This business hasn't claimed their profile yet. Contact them directly via the details below."); return; }
     setBooking(true);
-    const day = new Date();
-    day.setDate(day.getDate() + selectedDay);
     const { error } = await supabase.from("bookings").insert({
       customer_id: user.id,
-      professional_handle: pro.handle,
-      professional_name: pro.name,
-      category: pro.category,
-      city: pro.city,
-      event_date: day.toISOString().slice(0, 10),
-      budget_inr: pro.hourly,
-      requirements: `Requested time: ${selectedSlot}`,
+      listing_id: l.id,
+      professional_name: l.business_name,
+      category: l.categories[0] ?? "photographer",
+      city: l.city,
     });
     setBooking(false);
-    if (error) { toast.error(error.message); return; }
-    toast.success("Booking request sent");
+    if (error) return toast.error(error.message);
+    toast.success("Quote request sent");
     navigate({ to: "/app" });
   };
 
-  const days = Array.from({ length: 7 }).map((_, i) => {
-    const d = new Date();
-    d.setDate(d.getDate() + i);
-    return { i, label: d.toLocaleDateString("en-US", { weekday: "short" }), date: d.getDate(), full: d.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" }) };
-  });
-  const slots = ["09:00", "11:00", "13:30", "15:00", "17:30"];
-
-  const related = PROFESSIONALS.filter((p) => p.id !== pro.id && p.category === pro.category).slice(0, 3);
-
   return (
-    <main className="min-h-screen">
-      <SiteNav />
-
-      {/* Hero */}
+    <main className="min-h-screen"><SiteNav />
       <section className="pt-24">
-        <div className="relative h-[42vh] min-h-[320px] overflow-hidden border-b border-border/60">
-          <img src={pro.image} alt="" className="absolute inset-0 h-full w-full object-cover opacity-30" />
+        <div className="relative h-[38vh] min-h-[280px] overflow-hidden border-b border-border/60 bg-secondary">
+          {l.cover_url && <img src={l.cover_url} alt="" className="absolute inset-0 h-full w-full object-cover opacity-40" />}
           <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-transparent" />
         </div>
-        <div className="max-w-7xl mx-auto px-6 -mt-24 relative">
+        <div className="max-w-7xl mx-auto px-6 -mt-20 relative">
           <div className="flex flex-col md:flex-row items-start md:items-end gap-6">
-            <div className="h-32 w-32 md:h-40 md:w-40 rounded-2xl overflow-hidden border-2 border-border bg-card shadow-[var(--shadow-gold)]">
-              <img src={pro.image} alt={pro.name} className="h-full w-full object-cover" />
+            <div className="h-28 w-28 md:h-36 md:w-36 rounded-2xl overflow-hidden border-2 border-border bg-card shadow-[var(--shadow-gold)] grid place-items-center text-muted-foreground">
+              {l.avatar_url ? <img src={l.avatar_url} alt={l.business_name} className="h-full w-full object-cover" /> : l.business_name.slice(0,1)}
             </div>
             <div className="flex-1">
-              <p className="text-xs uppercase tracking-[0.2em] text-primary mb-2 capitalize">{pro.category}</p>
-              <h1 className="font-display text-3xl sm:text-5xl tracking-tight flex items-center gap-3">
-                {pro.name}
-                <Verified className="h-6 w-6 text-primary" />
+              <p className="text-xs uppercase tracking-[0.2em] text-primary mb-2 capitalize">{l.categories.join(" · ")}</p>
+              <h1 className="font-display text-3xl sm:text-4xl tracking-tight flex flex-wrap items-center gap-3">
+                {l.business_name}
+                {l.verification_status !== "unverified" && <span className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-md bg-primary/15 text-primary border border-primary/30"><ShieldCheck className="h-3 w-3" /> Verified</span>}
               </h1>
-              <p className="mt-2 text-muted-foreground">@{pro.handle} · {pro.specialty}</p>
+              {l.tagline && <p className="mt-2 text-muted-foreground">{l.tagline}</p>}
               <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted-foreground">
-                <span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5" /> {pro.city}, {pro.country}</span>
-                <span className="inline-flex items-center gap-1"><Star className="h-3.5 w-3.5 fill-primary text-primary" /> <span className="text-foreground">{pro.rating.toFixed(1)}</span> ({pro.reviews} reviews)</span>
-                <span className="inline-flex items-center gap-1"><Clock className="h-3.5 w-3.5" /> {pro.experience} yrs experience</span>
-                <span className="inline-flex items-center gap-1"><Camera className="h-3.5 w-3.5" /> {pro.languages.join(" · ")}</span>
+                {l.city && <span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5" /> {[l.city, l.state, l.country].filter(Boolean).join(", ")}</span>}
+                {l.places_rating != null && <span className="inline-flex items-center gap-1"><Star className="h-3.5 w-3.5 fill-primary text-primary" /><span className="text-foreground">{l.places_rating.toFixed(1)}</span> ({l.places_review_count ?? 0} Google reviews)</span>}
               </div>
-            </div>
-            <div className="flex gap-2">
-              {user && (
-                <button
-                  onClick={() => toggle(pro.handle)}
-                  className="inline-flex items-center gap-1.5 rounded-md border border-border px-4 py-2 text-sm hover:bg-secondary/40 transition"
-                  aria-label="Save"
-                >
-                  <Heart className={`h-4 w-4 ${isFavorite(pro.handle) ? "fill-primary text-primary" : ""}`} />
-                  {isFavorite(pro.handle) ? "Saved" : "Save"}
-                </button>
-              )}
-              <button className="inline-flex items-center gap-1.5 rounded-md border border-border px-4 py-2 text-sm hover:bg-secondary/40 transition">
-                <Share2 className="h-4 w-4" /> Share
-              </button>
-              <button className="inline-flex items-center gap-1.5 rounded-md border border-border px-4 py-2 text-sm hover:bg-secondary/40 transition">
-                <MessageSquare className="h-4 w-4" /> Message
-              </button>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Body */}
-      <section className="py-12">
-        <div className="max-w-7xl mx-auto px-6 grid lg:grid-cols-12 gap-10">
-          <div className="lg:col-span-8">
-            {/* Bio */}
-            <div className="rounded-2xl border border-border bg-card/60 p-6">
-              <h2 className="text-xs uppercase tracking-wider text-muted-foreground mb-3">About</h2>
-              <p className="text-foreground/90 leading-relaxed">
-                {pro.name} is a {pro.specialty.toLowerCase()} creator based in {pro.city}, working with brands and clients worldwide for over {pro.experience} years.
-                Known for a refined, cinematic style and an effortless on-set energy — every project is approached with intention, craft and a story-first mindset.
-              </p>
-              <div className="mt-5 flex flex-wrap gap-2">
-                {["Brand", "Editorial", "Studio", "On-location", "Commercial license"].map((t) => (
-                  <span key={t} className="text-xs px-2.5 py-1 rounded-full border border-border bg-background text-muted-foreground">{t}</span>
-                ))}
-              </div>
-            </div>
-
-            {/* Tabs */}
-            <div className="mt-8 border-b border-border/60 flex gap-6 text-sm">
-              {(["portfolio", "services", "reviews"] as const).map((t) => (
-                <button key={t} onClick={() => setTab(t)} className={`pb-3 -mb-px capitalize transition border-b-2 ${tab === t ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
-                  {t}
-                </button>
-              ))}
-            </div>
-
-            <div className="mt-8">
-              {tab === "portfolio" && (
-                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {PORTFOLIO.map((src, i) => (
-                    <div key={i} className={`relative overflow-hidden rounded-xl border border-border ${i === 0 ? "sm:col-span-2 sm:row-span-2 aspect-square" : "aspect-[4/5]"}`}>
-                      <img src={src} alt={`${pro.name} portfolio ${i + 1}`} loading="lazy" className="h-full w-full object-cover hover:scale-105 transition duration-700" />
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {tab === "services" && (
-                <div className="grid md:grid-cols-3 gap-4">
-                  {SERVICES.map((s) => (
-                    <div key={s.name} className="rounded-2xl border border-border bg-card p-5 flex flex-col">
-                      <div className="text-xs uppercase tracking-wider text-muted-foreground">{s.duration}</div>
-                      <h3 className="font-display text-xl mt-1">{s.name}</h3>
-                    <div className="mt-4 font-display text-3xl">{formatINR(pro.hourly * s.priceMult)}<span className="text-sm text-muted-foreground font-sans"> total</span></div>
-                      <ul className="mt-4 space-y-2 text-sm text-muted-foreground flex-1">
-                        {s.includes.map((it) => (
-                          <li key={it} className="flex items-start gap-2"><Check className="h-4 w-4 text-primary mt-0.5 shrink-0" /> {it}</li>
-                        ))}
-                      </ul>
-                      <button className="mt-5 inline-flex items-center justify-center gap-1 rounded-md border border-border px-3 py-2 text-sm hover:bg-secondary/40 transition">
-                        Request <ArrowUpRight className="h-4 w-4" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {tab === "reviews" && (
-                <div className="space-y-4">
-                  {(dbReviews && dbReviews.length > 0
-                    ? dbReviews.map((r) => ({ n: "Verified client", r: r.rating, t: r.comment ?? "" }))
-                    : [
-                    { n: "Hannah W.", r: 5, t: "An absolute professional. Delivered ahead of schedule with stunning results — already booked the next campaign." },
-                    { n: "Marcus T.", r: 5, t: "Effortless to work with on set, and the final edit went beyond what we briefed. Worth every dollar." },
-                    { n: "Studio Onyx", r: 4.8, t: "Strong creative direction. Communication was excellent throughout pre-pro and delivery." },
-                    ]
-                  ).map((r, idx) => (
-                    <div key={idx} className="rounded-xl border border-border bg-card p-5">
-                      <div className="flex items-center justify-between">
-                        <div className="font-medium">{r.n}</div>
-                        <div className="inline-flex items-center gap-1 text-sm"><Star className="h-3.5 w-3.5 fill-primary text-primary" /> {r.r}</div>
-                      </div>
-                      <p className="text-sm text-muted-foreground mt-2">{r.t}</p>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Booking sidebar */}
-          <aside className="lg:col-span-4 lg:sticky lg:top-24 self-start">
-            <div className="rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-gold)]">
-              <div className="flex items-baseline justify-between">
-                <div>
-                  <div className="font-display text-3xl">{formatINR(pro.hourly)}<span className="text-sm text-muted-foreground font-sans"> /hr</span></div>
-                  <div className="text-xs text-muted-foreground mt-1 capitalize">Available {pro.availability.replace("-", " ")}</div>
-                </div>
-                <span className="text-[10px] px-2 py-1 rounded-md bg-primary/15 text-primary border border-primary/30 inline-flex items-center gap-1">
-                  <Verified className="h-3 w-3" /> ID verified
-                </span>
-              </div>
-
-              <div className="mt-5">
-                <div className="flex items-center justify-between text-xs uppercase tracking-wider text-muted-foreground mb-2">
-                  <span>Available times</span>
-                  <Calendar className="h-3.5 w-3.5" />
-                </div>
-                <div className="grid grid-cols-7 gap-1.5">
-                  {days.map((d) => (
-                    <button
-                      key={d.i}
-                      onClick={() => { setSelectedDay(d.i); setSelectedSlot(null); }}
-                      className={`flex flex-col items-center py-2 rounded-md border text-xs transition ${selectedDay === d.i ? "border-primary/50 bg-primary/10 text-primary" : "border-border bg-background hover:bg-secondary/40 text-muted-foreground"}`}
-                    >
-                      <span>{d.label}</span>
-                      <span className="font-display text-base text-foreground">{d.date}</span>
-                    </button>
-                  ))}
-                </div>
-
-                <div className="mt-4 grid grid-cols-3 gap-1.5">
-                  {slots.map((s) => (
-                    <button
-                      key={s}
-                      onClick={() => setSelectedSlot(s)}
-                      className={`text-xs px-2 py-2 rounded-md border transition ${selectedSlot === s ? "border-primary/50 bg-primary/10 text-primary" : "border-border bg-background hover:bg-secondary/40"}`}
-                    >
-                      {s}
-                    </button>
-                  ))}
-                </div>
-
-                <button
-                  disabled={!selectedSlot || booking}
-                  onClick={handleBook}
-                  className="mt-5 inline-flex w-full items-center justify-center gap-1.5 rounded-md bg-[image:var(--gradient-gold)] text-primary-foreground px-3 py-2.5 text-sm font-medium hover:opacity-90 transition disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  {booking ? "Booking…" : selectedSlot ? `Book ${days[selectedDay].full} · ${selectedSlot}` : "Select a time"}
-                  <ArrowUpRight className="h-4 w-4" />
-                </button>
-
-                <p className="mt-3 text-[11px] text-muted-foreground text-center">You won't be charged yet · Free cancellation up to 48h before</p>
-              </div>
-            </div>
-
-            <div className="mt-4 rounded-2xl border border-border bg-card/60 p-5 text-sm">
-              <div className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Trust & safety</div>
-              <ul className="space-y-2 text-muted-foreground">
-                <li className="flex items-start gap-2"><Check className="h-4 w-4 text-primary mt-0.5" /> Escrow-protected payments</li>
-                <li className="flex items-start gap-2"><Check className="h-4 w-4 text-primary mt-0.5" /> AI-vetted portfolio & ID</li>
-                <li className="flex items-start gap-2"><Check className="h-4 w-4 text-primary mt-0.5" /> Money-back guarantee</li>
-              </ul>
-            </div>
-          </aside>
-        </div>
-      </section>
-
-      {/* Related */}
-      {related.length > 0 && (
-        <section className="pb-20">
+      {unclaimed && (
+        <section className="py-6">
           <div className="max-w-7xl mx-auto px-6">
-            <h2 className="font-display text-2xl mb-6">More like {pro.name.split(" ")[0]}</h2>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {related.map((r) => (
-                <Link key={r.id} to="/creators/$handle" params={{ handle: r.handle }} className="group rounded-2xl border border-border bg-card overflow-hidden hover:border-primary/30 transition">
-                  <div className="relative aspect-[4/5]">
-                    <img src={r.image} alt={r.name} loading="lazy" className="h-full w-full object-cover group-hover:scale-105 transition duration-700" />
-                  </div>
-                  <div className="p-4 flex items-center justify-between">
-                    <div>
-                      <div className="font-medium text-sm">{r.name}</div>
-                      <div className="text-xs text-muted-foreground">{r.specialty}</div>
-                    </div>
-                    <div className="text-sm font-display">{formatINR(r.hourly)}<span className="text-xs text-muted-foreground font-sans">/hr</span></div>
-                  </div>
-                </Link>
-              ))}
+            <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-200 p-4 flex flex-wrap items-start gap-3">
+              <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <div className="font-medium">This is an unclaimed listing</div>
+                <p className="text-sm opacity-90 mt-1">Sourced from public Google business data. Bookings through our platform are disabled until the business owner claims and verifies this profile.</p>
+              </div>
+              <Link to="/claim/$listingId" params={{ listingId: l.id }} className="text-sm rounded-md bg-[image:var(--gradient-gold)] text-primary-foreground px-4 py-2">Claim this profile</Link>
             </div>
           </div>
         </section>
       )}
+
+      <section className="py-10">
+        <div className="max-w-7xl mx-auto px-6 grid lg:grid-cols-12 gap-10">
+          <div className="lg:col-span-8 space-y-8">
+            {l.bio && (
+              <div className="rounded-2xl border border-border bg-card/60 p-6">
+                <h2 className="text-xs uppercase tracking-wider text-muted-foreground mb-3">About</h2>
+                <p className="text-foreground/90 leading-relaxed whitespace-pre-wrap">{l.bio}</p>
+              </div>
+            )}
+
+            {data.photos.length > 0 && (
+              <div>
+                <h2 className="text-xs uppercase tracking-wider text-muted-foreground mb-3">Portfolio</h2>
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {data.photos.map((p, i) => (
+                    <figure key={p.id} className={`relative overflow-hidden rounded-xl border border-border ${i === 0 ? "sm:col-span-2 sm:row-span-2 aspect-square" : "aspect-[4/5]"}`}>
+                      <img src={p.url} alt={`${l.business_name} portfolio`} loading="lazy" className="h-full w-full object-cover" />
+                      {p.attribution_html && <figcaption className="absolute bottom-1 right-1 text-[9px] bg-black/60 text-white/80 px-1.5 py-0.5 rounded" dangerouslySetInnerHTML={{ __html: `via ${p.attribution_html}` }} />}
+                    </figure>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {data.packages.length > 0 && (
+              <div>
+                <h2 className="text-xs uppercase tracking-wider text-muted-foreground mb-3">Packages</h2>
+                <div className="grid md:grid-cols-3 gap-3">
+                  {data.packages.map((pk) => (
+                    <div key={pk.id} className="rounded-2xl border border-border bg-card p-5">
+                      <div className="font-medium">{pk.title}</div>
+                      <div className="font-display text-2xl mt-2">{formatINR(pk.price_inr)}</div>
+                      {pk.description && <p className="text-sm text-muted-foreground mt-3">{pk.description}</p>}
+                      <div className="text-xs text-muted-foreground mt-3">Delivery: {pk.delivery_days} days</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {data.reviews.length > 0 && (
+              <div>
+                <h2 className="text-xs uppercase tracking-wider text-muted-foreground mb-3">Reviews from real bookings</h2>
+                <div className="space-y-3">
+                  {data.reviews.map((r) => (
+                    <div key={r.id} className="rounded-xl border border-border bg-card p-5">
+                      <div className="flex items-center justify-between">
+                        <div className="text-sm font-medium">Verified client</div>
+                        <div className="inline-flex items-center gap-1 text-sm"><Star className="h-3.5 w-3.5 fill-primary text-primary" /> {r.rating}</div>
+                      </div>
+                      {r.comment && <p className="text-sm text-muted-foreground mt-2">{r.comment}</p>}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <aside className="lg:col-span-4 lg:sticky lg:top-24 self-start space-y-4">
+            <div className="rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-gold)]">
+              {l.min_price_inr != null ? (
+                <div className="font-display text-2xl">From {formatINR(l.min_price_inr)}{l.max_price_inr ? ` – ${formatINR(l.max_price_inr)}` : ""}</div>
+              ) : (
+                <div className="text-sm text-muted-foreground">Contact for pricing</div>
+              )}
+              <button onClick={requestQuote} disabled={booking || unclaimed} className="mt-4 inline-flex w-full items-center justify-center gap-1.5 rounded-md bg-[image:var(--gradient-gold)] text-primary-foreground px-3 py-2.5 text-sm font-medium disabled:opacity-40">
+                {booking ? "Sending…" : unclaimed ? "Booking disabled" : "Request a quote"} {!unclaimed && <ArrowUpRight className="h-4 w-4" />}
+              </button>
+            </div>
+
+            <div className="rounded-2xl border border-border bg-card/60 p-5 text-sm space-y-3">
+              <div className="text-xs uppercase tracking-wider text-muted-foreground">Contact</div>
+              {l.phone && <div className="flex items-center gap-2"><Phone className="h-3.5 w-3.5 text-muted-foreground" /><a href={`tel:${l.phone}`} className="hover:text-primary">{l.phone}</a></div>}
+              {l.website && <div className="flex items-center gap-2"><Globe className="h-3.5 w-3.5 text-muted-foreground" /><a href={l.website} target="_blank" rel="noopener" className="hover:text-primary truncate">{l.website.replace(/^https?:\/\//, "")}</a></div>}
+              {l.instagram && <div className="flex items-center gap-2"><Instagram className="h-3.5 w-3.5 text-muted-foreground" /><a href={`https://instagram.com/${l.instagram.replace("@","")}`} target="_blank" rel="noopener" className="hover:text-primary">@{l.instagram.replace("@","")}</a></div>}
+              {l.formatted_address && <div className="flex items-start gap-2"><MapPin className="h-3.5 w-3.5 text-muted-foreground mt-0.5" /><span className="text-muted-foreground">{l.formatted_address}</span></div>}
+              {!l.phone && !l.website && !l.instagram && <div className="text-muted-foreground">No public contact info available.</div>}
+            </div>
+          </aside>
+        </div>
+      </section>
     </main>
   );
 }
