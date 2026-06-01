@@ -21,6 +21,7 @@ export type Database = {
           end_time: string
           id: string
           is_booked: boolean
+          listing_id: string | null
           note: string | null
           slot_date: string
           start_time: string
@@ -31,6 +32,7 @@ export type Database = {
           end_time?: string
           id?: string
           is_booked?: boolean
+          listing_id?: string | null
           note?: string | null
           slot_date: string
           start_time?: string
@@ -41,11 +43,20 @@ export type Database = {
           end_time?: string
           id?: string
           is_booked?: boolean
+          listing_id?: string | null
           note?: string | null
           slot_date?: string
           start_time?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "availability_slots_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "creator_listings"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       bookings: {
         Row: {
@@ -57,7 +68,8 @@ export type Database = {
           customer_id: string
           event_date: string | null
           id: string
-          professional_handle: string
+          listing_id: string | null
+          professional_handle: string | null
           professional_name: string
           requirements: string | null
           status: Database["public"]["Enums"]["booking_status"]
@@ -72,7 +84,8 @@ export type Database = {
           customer_id: string
           event_date?: string | null
           id?: string
-          professional_handle: string
+          listing_id?: string | null
+          professional_handle?: string | null
           professional_name: string
           requirements?: string | null
           status?: Database["public"]["Enums"]["booking_status"]
@@ -87,11 +100,181 @@ export type Database = {
           customer_id?: string
           event_date?: string | null
           id?: string
-          professional_handle?: string
+          listing_id?: string | null
+          professional_handle?: string | null
           professional_name?: string
           requirements?: string | null
           status?: Database["public"]["Enums"]["booking_status"]
           updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookings_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "creator_listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      claim_requests: {
+        Row: {
+          business_email: string | null
+          claimant_user_id: string
+          created_at: string
+          id: string
+          listing_id: string
+          notes: string | null
+          proof_url: string | null
+          rejection_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: Database["public"]["Enums"]["claim_status"]
+          updated_at: string
+        }
+        Insert: {
+          business_email?: string | null
+          claimant_user_id: string
+          created_at?: string
+          id?: string
+          listing_id: string
+          notes?: string | null
+          proof_url?: string | null
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["claim_status"]
+          updated_at?: string
+        }
+        Update: {
+          business_email?: string | null
+          claimant_user_id?: string
+          created_at?: string
+          id?: string
+          listing_id?: string
+          notes?: string | null
+          proof_url?: string | null
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["claim_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "claim_requests_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "creator_listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      creator_listings: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          business_name: string
+          categories: string[]
+          city: string | null
+          country: string | null
+          cover_url: string | null
+          created_at: string
+          display_name: string | null
+          email: string | null
+          formatted_address: string | null
+          google_place_id: string | null
+          id: string
+          instagram: string | null
+          is_published: boolean
+          lat: number | null
+          lng: number | null
+          max_price_inr: number | null
+          min_price_inr: number | null
+          owner_user_id: string | null
+          phone: string | null
+          places_last_synced_at: string | null
+          places_rating: number | null
+          places_review_count: number | null
+          response_time_hours: number | null
+          slug: string
+          source: Database["public"]["Enums"]["listing_source"]
+          specialties: string[]
+          state: string | null
+          tagline: string | null
+          updated_at: string
+          verification_status: Database["public"]["Enums"]["verification_status"]
+          website: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          business_name: string
+          categories?: string[]
+          city?: string | null
+          country?: string | null
+          cover_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          email?: string | null
+          formatted_address?: string | null
+          google_place_id?: string | null
+          id?: string
+          instagram?: string | null
+          is_published?: boolean
+          lat?: number | null
+          lng?: number | null
+          max_price_inr?: number | null
+          min_price_inr?: number | null
+          owner_user_id?: string | null
+          phone?: string | null
+          places_last_synced_at?: string | null
+          places_rating?: number | null
+          places_review_count?: number | null
+          response_time_hours?: number | null
+          slug: string
+          source?: Database["public"]["Enums"]["listing_source"]
+          specialties?: string[]
+          state?: string | null
+          tagline?: string | null
+          updated_at?: string
+          verification_status?: Database["public"]["Enums"]["verification_status"]
+          website?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          business_name?: string
+          categories?: string[]
+          city?: string | null
+          country?: string | null
+          cover_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          email?: string | null
+          formatted_address?: string | null
+          google_place_id?: string | null
+          id?: string
+          instagram?: string | null
+          is_published?: boolean
+          lat?: number | null
+          lng?: number | null
+          max_price_inr?: number | null
+          min_price_inr?: number | null
+          owner_user_id?: string | null
+          phone?: string | null
+          places_last_synced_at?: string | null
+          places_rating?: number | null
+          places_review_count?: number | null
+          response_time_hours?: number | null
+          slug?: string
+          source?: Database["public"]["Enums"]["listing_source"]
+          specialties?: string[]
+          state?: string | null
+          tagline?: string | null
+          updated_at?: string
+          verification_status?: Database["public"]["Enums"]["verification_status"]
+          website?: string | null
         }
         Relationships: []
       }
@@ -145,21 +328,76 @@ export type Database = {
           created_at: string
           customer_id: string
           id: string
-          professional_handle: string
+          listing_id: string | null
+          professional_handle: string | null
         }
         Insert: {
           created_at?: string
           customer_id: string
           id?: string
-          professional_handle: string
+          listing_id?: string | null
+          professional_handle?: string | null
         }
         Update: {
           created_at?: string
           customer_id?: string
           id?: string
-          professional_handle?: string
+          listing_id?: string | null
+          professional_handle?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "favorites_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "creator_listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      listing_photos: {
+        Row: {
+          attribution_html: string | null
+          created_at: string
+          height: number | null
+          id: string
+          listing_id: string
+          position: number
+          source: Database["public"]["Enums"]["photo_source"]
+          url: string
+          width: number | null
+        }
+        Insert: {
+          attribution_html?: string | null
+          created_at?: string
+          height?: number | null
+          id?: string
+          listing_id: string
+          position?: number
+          source?: Database["public"]["Enums"]["photo_source"]
+          url: string
+          width?: number | null
+        }
+        Update: {
+          attribution_html?: string | null
+          created_at?: string
+          height?: number | null
+          id?: string
+          listing_id?: string
+          position?: number
+          source?: Database["public"]["Enums"]["photo_source"]
+          url?: string
+          width?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_photos_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "creator_listings"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       messages: {
         Row: {
@@ -229,12 +467,37 @@ export type Database = {
         }
         Relationships: []
       }
+      places_search_log: {
+        Row: {
+          created_at: string
+          id: string
+          ip: string | null
+          query: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          ip?: string | null
+          query?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          ip?: string | null
+          query?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       portfolio_items: {
         Row: {
           created_at: string
           creator_id: string
           description: string | null
           id: string
+          listing_id: string | null
           media_url: string
           tags: string[] | null
           title: string
@@ -245,6 +508,7 @@ export type Database = {
           creator_id: string
           description?: string | null
           id?: string
+          listing_id?: string | null
           media_url: string
           tags?: string[] | null
           title: string
@@ -255,12 +519,21 @@ export type Database = {
           creator_id?: string
           description?: string | null
           id?: string
+          listing_id?: string | null
           media_url?: string
           tags?: string[] | null
           title?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "portfolio_items_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "creator_listings"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       pricing_packages: {
         Row: {
@@ -270,6 +543,7 @@ export type Database = {
           description: string | null
           id: string
           is_active: boolean
+          listing_id: string | null
           price_inr: number
           title: string
           updated_at: string
@@ -281,6 +555,7 @@ export type Database = {
           description?: string | null
           id?: string
           is_active?: boolean
+          listing_id?: string | null
           price_inr: number
           title: string
           updated_at?: string
@@ -292,11 +567,20 @@ export type Database = {
           description?: string | null
           id?: string
           is_active?: boolean
+          listing_id?: string | null
           price_inr?: number
           title?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "pricing_packages_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "creator_listings"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -411,7 +695,8 @@ export type Database = {
           created_at: string
           customer_id: string
           id: string
-          professional_handle: string
+          listing_id: string | null
+          professional_handle: string | null
           rating: number
         }
         Insert: {
@@ -420,7 +705,8 @@ export type Database = {
           created_at?: string
           customer_id: string
           id?: string
-          professional_handle: string
+          listing_id?: string | null
+          professional_handle?: string | null
           rating: number
         }
         Update: {
@@ -429,7 +715,8 @@ export type Database = {
           created_at?: string
           customer_id?: string
           id?: string
-          professional_handle?: string
+          listing_id?: string | null
+          professional_handle?: string | null
           rating?: number
         }
         Relationships: [
@@ -438,6 +725,13 @@ export type Database = {
             columns: ["booking_id"]
             isOneToOne: false
             referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "creator_listings"
             referencedColumns: ["id"]
           },
         ]
@@ -484,6 +778,7 @@ export type Database = {
         | "in_progress"
         | "completed"
         | "cancelled"
+      claim_status: "pending" | "approved" | "rejected"
       editor_status:
         | "open"
         | "in_progress"
@@ -491,6 +786,13 @@ export type Database = {
         | "delivered"
         | "cancelled"
       file_kind: "source" | "draft" | "revision" | "delivery"
+      listing_source: "self_serve" | "google_places" | "claimed"
+      photo_source: "google_places" | "uploaded"
+      verification_status:
+        | "unverified"
+        | "email_verified"
+        | "id_verified"
+        | "business_verified"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -626,6 +928,7 @@ export const Constants = {
         "completed",
         "cancelled",
       ],
+      claim_status: ["pending", "approved", "rejected"],
       editor_status: [
         "open",
         "in_progress",
@@ -634,6 +937,14 @@ export const Constants = {
         "cancelled",
       ],
       file_kind: ["source", "draft", "revision", "delivery"],
+      listing_source: ["self_serve", "google_places", "claimed"],
+      photo_source: ["google_places", "uploaded"],
+      verification_status: [
+        "unverified",
+        "email_verified",
+        "id_verified",
+        "business_verified",
+      ],
     },
   },
 } as const
