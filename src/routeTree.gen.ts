@@ -10,18 +10,26 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SignupRouteImport } from './routes/signup'
+import { Route as MarketplaceRouteImport } from './routes/marketplace'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as CreatorsHandleRouteImport } from './routes/creators.$handle'
 import { Route as AuthenticatedProRouteImport } from './routes/_authenticated/pro'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedEditorRouteImport } from './routes/_authenticated/editor'
+import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as ApiPublicCronRefreshPlacesRouteImport } from './routes/api/public/cron/refresh-places'
 
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
   path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MarketplaceRoute = MarketplaceRouteImport.update({
+  id: '/marketplace',
+  path: '/marketplace',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -36,6 +44,11 @@ const AuthenticatedRoute = AuthenticatedRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CreatorsHandleRoute = CreatorsHandleRouteImport.update({
+  id: '/creators/$handle',
+  path: '/creators/$handle',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedProRoute = AuthenticatedProRouteImport.update({
@@ -53,6 +66,11 @@ const AuthenticatedEditorRoute = AuthenticatedEditorRouteImport.update({
   path: '/editor',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedAppRoute = AuthenticatedAppRouteImport.update({
+  id: '/app',
+  path: '/app',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
@@ -68,21 +86,27 @@ const ApiPublicCronRefreshPlacesRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/marketplace': typeof MarketplaceRoute
   '/signup': typeof SignupRoute
   '/admin': typeof AuthenticatedAdminRoute
+  '/app': typeof AuthenticatedAppRoute
   '/editor': typeof AuthenticatedEditorRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/pro': typeof AuthenticatedProRoute
+  '/creators/$handle': typeof CreatorsHandleRoute
   '/api/public/cron/refresh-places': typeof ApiPublicCronRefreshPlacesRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/marketplace': typeof MarketplaceRoute
   '/signup': typeof SignupRoute
   '/admin': typeof AuthenticatedAdminRoute
+  '/app': typeof AuthenticatedAppRoute
   '/editor': typeof AuthenticatedEditorRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/pro': typeof AuthenticatedProRoute
+  '/creators/$handle': typeof CreatorsHandleRoute
   '/api/public/cron/refresh-places': typeof ApiPublicCronRefreshPlacesRoute
 }
 export interface FileRoutesById {
@@ -90,11 +114,14 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/login': typeof LoginRoute
+  '/marketplace': typeof MarketplaceRoute
   '/signup': typeof SignupRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
+  '/_authenticated/app': typeof AuthenticatedAppRoute
   '/_authenticated/editor': typeof AuthenticatedEditorRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/pro': typeof AuthenticatedProRoute
+  '/creators/$handle': typeof CreatorsHandleRoute
   '/api/public/cron/refresh-places': typeof ApiPublicCronRefreshPlacesRoute
 }
 export interface FileRouteTypes {
@@ -102,32 +129,41 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/login'
+    | '/marketplace'
     | '/signup'
     | '/admin'
+    | '/app'
     | '/editor'
     | '/onboarding'
     | '/pro'
+    | '/creators/$handle'
     | '/api/public/cron/refresh-places'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/login'
+    | '/marketplace'
     | '/signup'
     | '/admin'
+    | '/app'
     | '/editor'
     | '/onboarding'
     | '/pro'
+    | '/creators/$handle'
     | '/api/public/cron/refresh-places'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/login'
+    | '/marketplace'
     | '/signup'
     | '/_authenticated/admin'
+    | '/_authenticated/app'
     | '/_authenticated/editor'
     | '/_authenticated/onboarding'
     | '/_authenticated/pro'
+    | '/creators/$handle'
     | '/api/public/cron/refresh-places'
   fileRoutesById: FileRoutesById
 }
@@ -135,7 +171,9 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   LoginRoute: typeof LoginRoute
+  MarketplaceRoute: typeof MarketplaceRoute
   SignupRoute: typeof SignupRoute
+  CreatorsHandleRoute: typeof CreatorsHandleRoute
   ApiPublicCronRefreshPlacesRoute: typeof ApiPublicCronRefreshPlacesRoute
 }
 
@@ -146,6 +184,13 @@ declare module '@tanstack/react-router' {
       path: '/signup'
       fullPath: '/signup'
       preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/marketplace': {
+      id: '/marketplace'
+      path: '/marketplace'
+      fullPath: '/marketplace'
+      preLoaderRoute: typeof MarketplaceRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -169,6 +214,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/creators/$handle': {
+      id: '/creators/$handle'
+      path: '/creators/$handle'
+      fullPath: '/creators/$handle'
+      preLoaderRoute: typeof CreatorsHandleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/pro': {
       id: '/_authenticated/pro'
       path: '/pro'
@@ -190,6 +242,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedEditorRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/app': {
+      id: '/_authenticated/app'
+      path: '/app'
+      fullPath: '/app'
+      preLoaderRoute: typeof AuthenticatedAppRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/admin': {
       id: '/_authenticated/admin'
       path: '/admin'
@@ -209,6 +268,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
+  AuthenticatedAppRoute: typeof AuthenticatedAppRoute
   AuthenticatedEditorRoute: typeof AuthenticatedEditorRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedProRoute: typeof AuthenticatedProRoute
@@ -216,6 +276,7 @@ interface AuthenticatedRouteChildren {
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
+  AuthenticatedAppRoute: AuthenticatedAppRoute,
   AuthenticatedEditorRoute: AuthenticatedEditorRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedProRoute: AuthenticatedProRoute,
@@ -229,9 +290,21 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   LoginRoute: LoginRoute,
+  MarketplaceRoute: MarketplaceRoute,
   SignupRoute: SignupRoute,
+  CreatorsHandleRoute: CreatorsHandleRoute,
   ApiPublicCronRefreshPlacesRoute: ApiPublicCronRefreshPlacesRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
