@@ -21,6 +21,7 @@ import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authentic
 import { Route as AuthenticatedEditorRouteImport } from './routes/_authenticated/editor'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as AuthenticatedClaimListingIdRouteImport } from './routes/_authenticated/claim.$listingId'
 import { Route as ApiPublicCronRefreshPlacesRouteImport } from './routes/api/public/cron/refresh-places'
 
 const SignupRoute = SignupRouteImport.update({
@@ -83,6 +84,12 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedClaimListingIdRoute =
+  AuthenticatedClaimListingIdRouteImport.update({
+    id: '/claim/$listingId',
+    path: '/claim/$listingId',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const ApiPublicCronRefreshPlacesRoute =
   ApiPublicCronRefreshPlacesRouteImport.update({
     id: '/api/public/cron/refresh-places',
@@ -102,6 +109,7 @@ export interface FileRoutesByFullPath {
   '/onboarding-listing': typeof AuthenticatedOnboardingListingRoute
   '/pro': typeof AuthenticatedProRoute
   '/creators/$handle': typeof CreatorsHandleRoute
+  '/claim/$listingId': typeof AuthenticatedClaimListingIdRoute
   '/api/public/cron/refresh-places': typeof ApiPublicCronRefreshPlacesRoute
 }
 export interface FileRoutesByTo {
@@ -116,6 +124,7 @@ export interface FileRoutesByTo {
   '/onboarding-listing': typeof AuthenticatedOnboardingListingRoute
   '/pro': typeof AuthenticatedProRoute
   '/creators/$handle': typeof CreatorsHandleRoute
+  '/claim/$listingId': typeof AuthenticatedClaimListingIdRoute
   '/api/public/cron/refresh-places': typeof ApiPublicCronRefreshPlacesRoute
 }
 export interface FileRoutesById {
@@ -132,6 +141,7 @@ export interface FileRoutesById {
   '/_authenticated/onboarding-listing': typeof AuthenticatedOnboardingListingRoute
   '/_authenticated/pro': typeof AuthenticatedProRoute
   '/creators/$handle': typeof CreatorsHandleRoute
+  '/_authenticated/claim/$listingId': typeof AuthenticatedClaimListingIdRoute
   '/api/public/cron/refresh-places': typeof ApiPublicCronRefreshPlacesRoute
 }
 export interface FileRouteTypes {
@@ -148,6 +158,7 @@ export interface FileRouteTypes {
     | '/onboarding-listing'
     | '/pro'
     | '/creators/$handle'
+    | '/claim/$listingId'
     | '/api/public/cron/refresh-places'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -162,6 +173,7 @@ export interface FileRouteTypes {
     | '/onboarding-listing'
     | '/pro'
     | '/creators/$handle'
+    | '/claim/$listingId'
     | '/api/public/cron/refresh-places'
   id:
     | '__root__'
@@ -177,6 +189,7 @@ export interface FileRouteTypes {
     | '/_authenticated/onboarding-listing'
     | '/_authenticated/pro'
     | '/creators/$handle'
+    | '/_authenticated/claim/$listingId'
     | '/api/public/cron/refresh-places'
   fileRoutesById: FileRoutesById
 }
@@ -276,6 +289,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/claim/$listingId': {
+      id: '/_authenticated/claim/$listingId'
+      path: '/claim/$listingId'
+      fullPath: '/claim/$listingId'
+      preLoaderRoute: typeof AuthenticatedClaimListingIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/api/public/cron/refresh-places': {
       id: '/api/public/cron/refresh-places'
       path: '/api/public/cron/refresh-places'
@@ -293,6 +313,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedOnboardingListingRoute: typeof AuthenticatedOnboardingListingRoute
   AuthenticatedProRoute: typeof AuthenticatedProRoute
+  AuthenticatedClaimListingIdRoute: typeof AuthenticatedClaimListingIdRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
@@ -302,6 +323,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedOnboardingListingRoute: AuthenticatedOnboardingListingRoute,
   AuthenticatedProRoute: AuthenticatedProRoute,
+  AuthenticatedClaimListingIdRoute: AuthenticatedClaimListingIdRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
