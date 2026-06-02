@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as MarketplaceRouteImport } from './routes/marketplace'
 import { Route as LoginRouteImport } from './routes/login'
@@ -16,12 +17,21 @@ import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CreatorsHandleRouteImport } from './routes/creators.$handle'
 import { Route as AuthenticatedProRouteImport } from './routes/_authenticated/pro'
+import { Route as AuthenticatedOnboardingListingRouteImport } from './routes/_authenticated/onboarding-listing'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedEditorRouteImport } from './routes/_authenticated/editor'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
+import { Route as AuthenticatedAdminClaimsRouteImport } from './routes/_authenticated/admin-claims'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as DiscoverCategoryCityRouteImport } from './routes/discover.$category.$city'
+import { Route as AuthenticatedClaimListingIdRouteImport } from './routes/_authenticated/claim.$listingId'
 import { Route as ApiPublicCronRefreshPlacesRouteImport } from './routes/api/public/cron/refresh-places'
 
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
   path: '/signup',
@@ -56,6 +66,12 @@ const AuthenticatedProRoute = AuthenticatedProRouteImport.update({
   path: '/pro',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedOnboardingListingRoute =
+  AuthenticatedOnboardingListingRouteImport.update({
+    id: '/onboarding-listing',
+    path: '/onboarding-listing',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedOnboardingRoute = AuthenticatedOnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
@@ -71,11 +87,28 @@ const AuthenticatedAppRoute = AuthenticatedAppRouteImport.update({
   path: '/app',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedAdminClaimsRoute =
+  AuthenticatedAdminClaimsRouteImport.update({
+    id: '/admin-claims',
+    path: '/admin-claims',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const DiscoverCategoryCityRoute = DiscoverCategoryCityRouteImport.update({
+  id: '/discover/$category/$city',
+  path: '/discover/$category/$city',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedClaimListingIdRoute =
+  AuthenticatedClaimListingIdRouteImport.update({
+    id: '/claim/$listingId',
+    path: '/claim/$listingId',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const ApiPublicCronRefreshPlacesRoute =
   ApiPublicCronRefreshPlacesRouteImport.update({
     id: '/api/public/cron/refresh-places',
@@ -88,12 +121,17 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/marketplace': typeof MarketplaceRoute
   '/signup': typeof SignupRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin': typeof AuthenticatedAdminRoute
+  '/admin-claims': typeof AuthenticatedAdminClaimsRoute
   '/app': typeof AuthenticatedAppRoute
   '/editor': typeof AuthenticatedEditorRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/onboarding-listing': typeof AuthenticatedOnboardingListingRoute
   '/pro': typeof AuthenticatedProRoute
   '/creators/$handle': typeof CreatorsHandleRoute
+  '/claim/$listingId': typeof AuthenticatedClaimListingIdRoute
+  '/discover/$category/$city': typeof DiscoverCategoryCityRoute
   '/api/public/cron/refresh-places': typeof ApiPublicCronRefreshPlacesRoute
 }
 export interface FileRoutesByTo {
@@ -101,12 +139,17 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/marketplace': typeof MarketplaceRoute
   '/signup': typeof SignupRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin': typeof AuthenticatedAdminRoute
+  '/admin-claims': typeof AuthenticatedAdminClaimsRoute
   '/app': typeof AuthenticatedAppRoute
   '/editor': typeof AuthenticatedEditorRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/onboarding-listing': typeof AuthenticatedOnboardingListingRoute
   '/pro': typeof AuthenticatedProRoute
   '/creators/$handle': typeof CreatorsHandleRoute
+  '/claim/$listingId': typeof AuthenticatedClaimListingIdRoute
+  '/discover/$category/$city': typeof DiscoverCategoryCityRoute
   '/api/public/cron/refresh-places': typeof ApiPublicCronRefreshPlacesRoute
 }
 export interface FileRoutesById {
@@ -116,12 +159,17 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/marketplace': typeof MarketplaceRoute
   '/signup': typeof SignupRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
+  '/_authenticated/admin-claims': typeof AuthenticatedAdminClaimsRoute
   '/_authenticated/app': typeof AuthenticatedAppRoute
   '/_authenticated/editor': typeof AuthenticatedEditorRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
+  '/_authenticated/onboarding-listing': typeof AuthenticatedOnboardingListingRoute
   '/_authenticated/pro': typeof AuthenticatedProRoute
   '/creators/$handle': typeof CreatorsHandleRoute
+  '/_authenticated/claim/$listingId': typeof AuthenticatedClaimListingIdRoute
+  '/discover/$category/$city': typeof DiscoverCategoryCityRoute
   '/api/public/cron/refresh-places': typeof ApiPublicCronRefreshPlacesRoute
 }
 export interface FileRouteTypes {
@@ -131,12 +179,17 @@ export interface FileRouteTypes {
     | '/login'
     | '/marketplace'
     | '/signup'
+    | '/sitemap.xml'
     | '/admin'
+    | '/admin-claims'
     | '/app'
     | '/editor'
     | '/onboarding'
+    | '/onboarding-listing'
     | '/pro'
     | '/creators/$handle'
+    | '/claim/$listingId'
+    | '/discover/$category/$city'
     | '/api/public/cron/refresh-places'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -144,12 +197,17 @@ export interface FileRouteTypes {
     | '/login'
     | '/marketplace'
     | '/signup'
+    | '/sitemap.xml'
     | '/admin'
+    | '/admin-claims'
     | '/app'
     | '/editor'
     | '/onboarding'
+    | '/onboarding-listing'
     | '/pro'
     | '/creators/$handle'
+    | '/claim/$listingId'
+    | '/discover/$category/$city'
     | '/api/public/cron/refresh-places'
   id:
     | '__root__'
@@ -158,12 +216,17 @@ export interface FileRouteTypes {
     | '/login'
     | '/marketplace'
     | '/signup'
+    | '/sitemap.xml'
     | '/_authenticated/admin'
+    | '/_authenticated/admin-claims'
     | '/_authenticated/app'
     | '/_authenticated/editor'
     | '/_authenticated/onboarding'
+    | '/_authenticated/onboarding-listing'
     | '/_authenticated/pro'
     | '/creators/$handle'
+    | '/_authenticated/claim/$listingId'
+    | '/discover/$category/$city'
     | '/api/public/cron/refresh-places'
   fileRoutesById: FileRoutesById
 }
@@ -173,12 +236,21 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   MarketplaceRoute: typeof MarketplaceRoute
   SignupRoute: typeof SignupRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   CreatorsHandleRoute: typeof CreatorsHandleRoute
+  DiscoverCategoryCityRoute: typeof DiscoverCategoryCityRoute
   ApiPublicCronRefreshPlacesRoute: typeof ApiPublicCronRefreshPlacesRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/signup': {
       id: '/signup'
       path: '/signup'
@@ -228,6 +300,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/onboarding-listing': {
+      id: '/_authenticated/onboarding-listing'
+      path: '/onboarding-listing'
+      fullPath: '/onboarding-listing'
+      preLoaderRoute: typeof AuthenticatedOnboardingListingRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/onboarding': {
       id: '/_authenticated/onboarding'
       path: '/onboarding'
@@ -249,11 +328,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/admin-claims': {
+      id: '/_authenticated/admin-claims'
+      path: '/admin-claims'
+      fullPath: '/admin-claims'
+      preLoaderRoute: typeof AuthenticatedAdminClaimsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/admin': {
       id: '/_authenticated/admin'
       path: '/admin'
       fullPath: '/admin'
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/discover/$category/$city': {
+      id: '/discover/$category/$city'
+      path: '/discover/$category/$city'
+      fullPath: '/discover/$category/$city'
+      preLoaderRoute: typeof DiscoverCategoryCityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/claim/$listingId': {
+      id: '/_authenticated/claim/$listingId'
+      path: '/claim/$listingId'
+      fullPath: '/claim/$listingId'
+      preLoaderRoute: typeof AuthenticatedClaimListingIdRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/api/public/cron/refresh-places': {
@@ -268,18 +368,24 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
+  AuthenticatedAdminClaimsRoute: typeof AuthenticatedAdminClaimsRoute
   AuthenticatedAppRoute: typeof AuthenticatedAppRoute
   AuthenticatedEditorRoute: typeof AuthenticatedEditorRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
+  AuthenticatedOnboardingListingRoute: typeof AuthenticatedOnboardingListingRoute
   AuthenticatedProRoute: typeof AuthenticatedProRoute
+  AuthenticatedClaimListingIdRoute: typeof AuthenticatedClaimListingIdRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
+  AuthenticatedAdminClaimsRoute: AuthenticatedAdminClaimsRoute,
   AuthenticatedAppRoute: AuthenticatedAppRoute,
   AuthenticatedEditorRoute: AuthenticatedEditorRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
+  AuthenticatedOnboardingListingRoute: AuthenticatedOnboardingListingRoute,
   AuthenticatedProRoute: AuthenticatedProRoute,
+  AuthenticatedClaimListingIdRoute: AuthenticatedClaimListingIdRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
@@ -292,7 +398,9 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   MarketplaceRoute: MarketplaceRoute,
   SignupRoute: SignupRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   CreatorsHandleRoute: CreatorsHandleRoute,
+  DiscoverCategoryCityRoute: DiscoverCategoryCityRoute,
   ApiPublicCronRefreshPlacesRoute: ApiPublicCronRefreshPlacesRoute,
 }
 export const routeTree = rootRouteImport
