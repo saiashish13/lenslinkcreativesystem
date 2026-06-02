@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as MarketplaceRouteImport } from './routes/marketplace'
 import { Route as LoginRouteImport } from './routes/login'
@@ -26,6 +27,11 @@ import { Route as DiscoverCategoryCityRouteImport } from './routes/discover.$cat
 import { Route as AuthenticatedClaimListingIdRouteImport } from './routes/_authenticated/claim.$listingId'
 import { Route as ApiPublicCronRefreshPlacesRouteImport } from './routes/api/public/cron/refresh-places'
 
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
   path: '/signup',
@@ -115,6 +121,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/marketplace': typeof MarketplaceRoute
   '/signup': typeof SignupRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/admin-claims': typeof AuthenticatedAdminClaimsRoute
   '/app': typeof AuthenticatedAppRoute
@@ -132,6 +139,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/marketplace': typeof MarketplaceRoute
   '/signup': typeof SignupRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/admin-claims': typeof AuthenticatedAdminClaimsRoute
   '/app': typeof AuthenticatedAppRoute
@@ -151,6 +159,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/marketplace': typeof MarketplaceRoute
   '/signup': typeof SignupRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/admin-claims': typeof AuthenticatedAdminClaimsRoute
   '/_authenticated/app': typeof AuthenticatedAppRoute
@@ -170,6 +179,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/marketplace'
     | '/signup'
+    | '/sitemap.xml'
     | '/admin'
     | '/admin-claims'
     | '/app'
@@ -187,6 +197,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/marketplace'
     | '/signup'
+    | '/sitemap.xml'
     | '/admin'
     | '/admin-claims'
     | '/app'
@@ -205,6 +216,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/marketplace'
     | '/signup'
+    | '/sitemap.xml'
     | '/_authenticated/admin'
     | '/_authenticated/admin-claims'
     | '/_authenticated/app'
@@ -224,6 +236,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   MarketplaceRoute: typeof MarketplaceRoute
   SignupRoute: typeof SignupRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   CreatorsHandleRoute: typeof CreatorsHandleRoute
   DiscoverCategoryCityRoute: typeof DiscoverCategoryCityRoute
   ApiPublicCronRefreshPlacesRoute: typeof ApiPublicCronRefreshPlacesRoute
@@ -231,6 +244,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/signup': {
       id: '/signup'
       path: '/signup'
@@ -378,6 +398,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   MarketplaceRoute: MarketplaceRoute,
   SignupRoute: SignupRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   CreatorsHandleRoute: CreatorsHandleRoute,
   DiscoverCategoryCityRoute: DiscoverCategoryCityRoute,
   ApiPublicCronRefreshPlacesRoute: ApiPublicCronRefreshPlacesRoute,
