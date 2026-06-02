@@ -5,7 +5,6 @@ import { toast } from "sonner";
 import { Loader2, ShieldCheck } from "lucide-react";
 import { DashShell } from "@/components/dash-shell";
 import { submitClaim } from "@/lib/claims.functions";
-import { getListingBySlug } from "@/lib/listings.functions";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/claim/$listingId")({
