@@ -20,6 +20,7 @@ import { Route as AuthenticatedOnboardingListingRouteImport } from './routes/_au
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedEditorRouteImport } from './routes/_authenticated/editor'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
+import { Route as AuthenticatedAdminClaimsRouteImport } from './routes/_authenticated/admin-claims'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedClaimListingIdRouteImport } from './routes/_authenticated/claim.$listingId'
 import { Route as ApiPublicCronRefreshPlacesRouteImport } from './routes/api/public/cron/refresh-places'
@@ -79,6 +80,12 @@ const AuthenticatedAppRoute = AuthenticatedAppRouteImport.update({
   path: '/app',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedAdminClaimsRoute =
+  AuthenticatedAdminClaimsRouteImport.update({
+    id: '/admin-claims',
+    path: '/admin-claims',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
@@ -103,6 +110,7 @@ export interface FileRoutesByFullPath {
   '/marketplace': typeof MarketplaceRoute
   '/signup': typeof SignupRoute
   '/admin': typeof AuthenticatedAdminRoute
+  '/admin-claims': typeof AuthenticatedAdminClaimsRoute
   '/app': typeof AuthenticatedAppRoute
   '/editor': typeof AuthenticatedEditorRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
@@ -118,6 +126,7 @@ export interface FileRoutesByTo {
   '/marketplace': typeof MarketplaceRoute
   '/signup': typeof SignupRoute
   '/admin': typeof AuthenticatedAdminRoute
+  '/admin-claims': typeof AuthenticatedAdminClaimsRoute
   '/app': typeof AuthenticatedAppRoute
   '/editor': typeof AuthenticatedEditorRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
@@ -135,6 +144,7 @@ export interface FileRoutesById {
   '/marketplace': typeof MarketplaceRoute
   '/signup': typeof SignupRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
+  '/_authenticated/admin-claims': typeof AuthenticatedAdminClaimsRoute
   '/_authenticated/app': typeof AuthenticatedAppRoute
   '/_authenticated/editor': typeof AuthenticatedEditorRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
@@ -152,6 +162,7 @@ export interface FileRouteTypes {
     | '/marketplace'
     | '/signup'
     | '/admin'
+    | '/admin-claims'
     | '/app'
     | '/editor'
     | '/onboarding'
@@ -167,6 +178,7 @@ export interface FileRouteTypes {
     | '/marketplace'
     | '/signup'
     | '/admin'
+    | '/admin-claims'
     | '/app'
     | '/editor'
     | '/onboarding'
@@ -183,6 +195,7 @@ export interface FileRouteTypes {
     | '/marketplace'
     | '/signup'
     | '/_authenticated/admin'
+    | '/_authenticated/admin-claims'
     | '/_authenticated/app'
     | '/_authenticated/editor'
     | '/_authenticated/onboarding'
@@ -282,6 +295,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/admin-claims': {
+      id: '/_authenticated/admin-claims'
+      path: '/admin-claims'
+      fullPath: '/admin-claims'
+      preLoaderRoute: typeof AuthenticatedAdminClaimsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/admin': {
       id: '/_authenticated/admin'
       path: '/admin'
@@ -308,6 +328,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
+  AuthenticatedAdminClaimsRoute: typeof AuthenticatedAdminClaimsRoute
   AuthenticatedAppRoute: typeof AuthenticatedAppRoute
   AuthenticatedEditorRoute: typeof AuthenticatedEditorRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
@@ -318,6 +339,7 @@ interface AuthenticatedRouteChildren {
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
+  AuthenticatedAdminClaimsRoute: AuthenticatedAdminClaimsRoute,
   AuthenticatedAppRoute: AuthenticatedAppRoute,
   AuthenticatedEditorRoute: AuthenticatedEditorRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
@@ -342,3 +364,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
