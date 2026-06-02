@@ -16,6 +16,7 @@ import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CreatorsHandleRouteImport } from './routes/creators.$handle'
 import { Route as AuthenticatedProRouteImport } from './routes/_authenticated/pro'
+import { Route as AuthenticatedOnboardingListingRouteImport } from './routes/_authenticated/onboarding-listing'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedEditorRouteImport } from './routes/_authenticated/editor'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
@@ -56,6 +57,12 @@ const AuthenticatedProRoute = AuthenticatedProRouteImport.update({
   path: '/pro',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedOnboardingListingRoute =
+  AuthenticatedOnboardingListingRouteImport.update({
+    id: '/onboarding-listing',
+    path: '/onboarding-listing',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedOnboardingRoute = AuthenticatedOnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
@@ -92,6 +99,7 @@ export interface FileRoutesByFullPath {
   '/app': typeof AuthenticatedAppRoute
   '/editor': typeof AuthenticatedEditorRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/onboarding-listing': typeof AuthenticatedOnboardingListingRoute
   '/pro': typeof AuthenticatedProRoute
   '/creators/$handle': typeof CreatorsHandleRoute
   '/api/public/cron/refresh-places': typeof ApiPublicCronRefreshPlacesRoute
@@ -105,6 +113,7 @@ export interface FileRoutesByTo {
   '/app': typeof AuthenticatedAppRoute
   '/editor': typeof AuthenticatedEditorRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/onboarding-listing': typeof AuthenticatedOnboardingListingRoute
   '/pro': typeof AuthenticatedProRoute
   '/creators/$handle': typeof CreatorsHandleRoute
   '/api/public/cron/refresh-places': typeof ApiPublicCronRefreshPlacesRoute
@@ -120,6 +129,7 @@ export interface FileRoutesById {
   '/_authenticated/app': typeof AuthenticatedAppRoute
   '/_authenticated/editor': typeof AuthenticatedEditorRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
+  '/_authenticated/onboarding-listing': typeof AuthenticatedOnboardingListingRoute
   '/_authenticated/pro': typeof AuthenticatedProRoute
   '/creators/$handle': typeof CreatorsHandleRoute
   '/api/public/cron/refresh-places': typeof ApiPublicCronRefreshPlacesRoute
@@ -135,6 +145,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/editor'
     | '/onboarding'
+    | '/onboarding-listing'
     | '/pro'
     | '/creators/$handle'
     | '/api/public/cron/refresh-places'
@@ -148,6 +159,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/editor'
     | '/onboarding'
+    | '/onboarding-listing'
     | '/pro'
     | '/creators/$handle'
     | '/api/public/cron/refresh-places'
@@ -162,6 +174,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app'
     | '/_authenticated/editor'
     | '/_authenticated/onboarding'
+    | '/_authenticated/onboarding-listing'
     | '/_authenticated/pro'
     | '/creators/$handle'
     | '/api/public/cron/refresh-places'
@@ -228,6 +241,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/onboarding-listing': {
+      id: '/_authenticated/onboarding-listing'
+      path: '/onboarding-listing'
+      fullPath: '/onboarding-listing'
+      preLoaderRoute: typeof AuthenticatedOnboardingListingRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/onboarding': {
       id: '/_authenticated/onboarding'
       path: '/onboarding'
@@ -271,6 +291,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedAppRoute: typeof AuthenticatedAppRoute
   AuthenticatedEditorRoute: typeof AuthenticatedEditorRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
+  AuthenticatedOnboardingListingRoute: typeof AuthenticatedOnboardingListingRoute
   AuthenticatedProRoute: typeof AuthenticatedProRoute
 }
 
@@ -279,6 +300,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAppRoute: AuthenticatedAppRoute,
   AuthenticatedEditorRoute: AuthenticatedEditorRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
+  AuthenticatedOnboardingListingRoute: AuthenticatedOnboardingListingRoute,
   AuthenticatedProRoute: AuthenticatedProRoute,
 }
 
@@ -298,3 +320,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
