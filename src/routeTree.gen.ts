@@ -22,6 +22,7 @@ import { Route as AuthenticatedEditorRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
 import { Route as AuthenticatedAdminClaimsRouteImport } from './routes/_authenticated/admin-claims'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as DiscoverCategoryCityRouteImport } from './routes/discover.$category.$city'
 import { Route as AuthenticatedClaimListingIdRouteImport } from './routes/_authenticated/claim.$listingId'
 import { Route as ApiPublicCronRefreshPlacesRouteImport } from './routes/api/public/cron/refresh-places'
 
@@ -91,6 +92,11 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const DiscoverCategoryCityRoute = DiscoverCategoryCityRouteImport.update({
+  id: '/discover/$category/$city',
+  path: '/discover/$category/$city',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedClaimListingIdRoute =
   AuthenticatedClaimListingIdRouteImport.update({
     id: '/claim/$listingId',
@@ -118,6 +124,7 @@ export interface FileRoutesByFullPath {
   '/pro': typeof AuthenticatedProRoute
   '/creators/$handle': typeof CreatorsHandleRoute
   '/claim/$listingId': typeof AuthenticatedClaimListingIdRoute
+  '/discover/$category/$city': typeof DiscoverCategoryCityRoute
   '/api/public/cron/refresh-places': typeof ApiPublicCronRefreshPlacesRoute
 }
 export interface FileRoutesByTo {
@@ -134,6 +141,7 @@ export interface FileRoutesByTo {
   '/pro': typeof AuthenticatedProRoute
   '/creators/$handle': typeof CreatorsHandleRoute
   '/claim/$listingId': typeof AuthenticatedClaimListingIdRoute
+  '/discover/$category/$city': typeof DiscoverCategoryCityRoute
   '/api/public/cron/refresh-places': typeof ApiPublicCronRefreshPlacesRoute
 }
 export interface FileRoutesById {
@@ -152,6 +160,7 @@ export interface FileRoutesById {
   '/_authenticated/pro': typeof AuthenticatedProRoute
   '/creators/$handle': typeof CreatorsHandleRoute
   '/_authenticated/claim/$listingId': typeof AuthenticatedClaimListingIdRoute
+  '/discover/$category/$city': typeof DiscoverCategoryCityRoute
   '/api/public/cron/refresh-places': typeof ApiPublicCronRefreshPlacesRoute
 }
 export interface FileRouteTypes {
@@ -170,6 +179,7 @@ export interface FileRouteTypes {
     | '/pro'
     | '/creators/$handle'
     | '/claim/$listingId'
+    | '/discover/$category/$city'
     | '/api/public/cron/refresh-places'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -186,6 +196,7 @@ export interface FileRouteTypes {
     | '/pro'
     | '/creators/$handle'
     | '/claim/$listingId'
+    | '/discover/$category/$city'
     | '/api/public/cron/refresh-places'
   id:
     | '__root__'
@@ -203,6 +214,7 @@ export interface FileRouteTypes {
     | '/_authenticated/pro'
     | '/creators/$handle'
     | '/_authenticated/claim/$listingId'
+    | '/discover/$category/$city'
     | '/api/public/cron/refresh-places'
   fileRoutesById: FileRoutesById
 }
@@ -213,6 +225,7 @@ export interface RootRouteChildren {
   MarketplaceRoute: typeof MarketplaceRoute
   SignupRoute: typeof SignupRoute
   CreatorsHandleRoute: typeof CreatorsHandleRoute
+  DiscoverCategoryCityRoute: typeof DiscoverCategoryCityRoute
   ApiPublicCronRefreshPlacesRoute: typeof ApiPublicCronRefreshPlacesRoute
 }
 
@@ -309,6 +322,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/discover/$category/$city': {
+      id: '/discover/$category/$city'
+      path: '/discover/$category/$city'
+      fullPath: '/discover/$category/$city'
+      preLoaderRoute: typeof DiscoverCategoryCityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/claim/$listingId': {
       id: '/_authenticated/claim/$listingId'
       path: '/claim/$listingId'
@@ -359,6 +379,7 @@ const rootRouteChildren: RootRouteChildren = {
   MarketplaceRoute: MarketplaceRoute,
   SignupRoute: SignupRoute,
   CreatorsHandleRoute: CreatorsHandleRoute,
+  DiscoverCategoryCityRoute: DiscoverCategoryCityRoute,
   ApiPublicCronRefreshPlacesRoute: ApiPublicCronRefreshPlacesRoute,
 }
 export const routeTree = rootRouteImport
