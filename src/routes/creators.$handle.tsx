@@ -3,6 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { ArrowUpRight, MapPin, Star, ShieldCheck, Globe, Phone, Instagram, Loader2, AlertCircle } from "lucide-react";
 import { SiteNav } from "@/components/site-nav";
+import { SiteFooter } from "@/components/site-footer";
 import { getListingBySlug } from "@/lib/listings.functions";
 import { formatINR } from "@/lib/format";
 import { useAuth } from "@/hooks/use-auth";
@@ -199,6 +200,7 @@ function CreatorProfile() {
           </aside>
         </div>
       </section>
+      <SiteFooter />
     </main>
   );
 }

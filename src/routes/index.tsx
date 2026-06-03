@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowUpRight, Camera, Search, MapPin, ShieldCheck, Video, Scissors, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { SiteNav } from "@/components/site-nav";
+import { SiteFooter } from "@/components/site-footer";
 
 export const Route = createFileRoute("/")({
   component: Landing,
@@ -21,6 +22,7 @@ function Landing() {
       <Categories />
       <HowItWorks />
       <ForCreators />
+      <SiteFooter />
     </main>
   );
 }
