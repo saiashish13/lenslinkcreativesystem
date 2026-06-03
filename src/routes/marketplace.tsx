@@ -3,9 +3,10 @@ import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { zodValidator, fallback } from "@tanstack/zod-adapter";
 import { z } from "zod";
-import { MapPin, Search, Star, SlidersHorizontal, X, Loader2, ArrowUpRight, ShieldCheck, Locate, Globe } from "lucide-react";
+import { MapPin, Search, Star, SlidersHorizontal, X, Loader2, ArrowUpRight, ShieldCheck, Locate, Globe, Map as MapIcon, LayoutGrid } from "lucide-react";
 import { SiteNav } from "@/components/site-nav";
 import { SiteFooter } from "@/components/site-footer";
+import { MarketplaceMap } from "@/components/marketplace-map";
 import { listListings } from "@/lib/listings.functions";
 import { searchPlacesPublic } from "@/lib/places.functions";
 import { BUDGET_BANDS, type BudgetBandId, SORT_OPTIONS, type SortId } from "@/lib/listings";
@@ -18,6 +19,8 @@ const searchSchema = z.object({
   budget: fallback(z.enum(["any", "u1k", "1to5", "5to10", "10to25", "25plus"]), "any").default("any"),
   minRating: fallback(z.number().min(0).max(5), 0).default(0),
   sort: fallback(z.enum(["price_asc", "rating_desc", "reviews_desc"]), "price_asc").default("price_asc"),
+  view: fallback(z.enum(["grid", "map"]), "grid").default("grid"),
+  radius: fallback(z.number().min(1).max(200), 25).default(25),
 });
 
 export const Route = createFileRoute("/marketplace")({
@@ -44,12 +47,13 @@ function Marketplace() {
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [importing, setImporting] = useState(false);
   const [importMsg, setImportMsg] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const update = (patch: Partial<typeof search>) =>
     navigate({ search: (p: typeof search) => ({ ...p, ...patch }), replace: true });
 
   const reset = () =>
-    navigate({ search: { q: "", city: "", category: "all", budget: "any", minRating: 0, sort: "price_asc" } });
+    navigate({ search: { q: "", city: "", category: "all", budget: "any", minRating: 0, sort: "price_asc", view: search.view, radius: search.radius } });
 
   useEffect(() => {
     setLoading(true);
@@ -63,12 +67,12 @@ function Marketplace() {
         minPrice: band?.min,
         maxPrice: band?.max,
         sort: search.sort as SortId as "price_asc" | "rating_desc" | "reviews_desc",
-        limit: 30,
+        limit: search.view === "map" ? 60 : 30,
       },
     })
       .then((r) => { setResults(r.listings); setTotal(r.total); })
       .finally(() => setLoading(false));
-  }, [search.q, search.city, search.category, search.budget, search.minRating, search.sort, fetchListings]);
+  }, [search.q, search.city, search.category, search.budget, search.minRating, search.sort, search.view, fetchListings]);
 
   const useMyLocation = () => {
     if (!navigator.geolocation) return;
@@ -189,9 +193,28 @@ function Marketplace() {
           </aside>
 
           <div className="lg:col-span-9">
-            <div className="flex items-center justify-between mb-6 text-sm text-muted-foreground">
-              <div><span className="text-foreground font-medium">{total}</span> creators{search.city ? <> in <span className="text-foreground">{search.city}</span></> : null}</div>
-              {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+            <div className="flex items-center justify-between mb-6 text-sm text-muted-foreground gap-3 flex-wrap">
+              <div className="inline-flex items-center gap-2">
+                <span><span className="text-foreground font-medium">{total}</span> creators{search.city ? <> in <span className="text-foreground">{search.city}</span></> : null}</span>
+                {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+              </div>
+              <div className="inline-flex items-center gap-2">
+                {search.view === "map" && coords && (
+                  <label className="inline-flex items-center gap-2 text-xs">
+                    <span>Radius</span>
+                    <input type="range" min={1} max={100} step={1} value={search.radius} onChange={(e) => update({ radius: Number(e.target.value) })} className="accent-primary w-28" />
+                    <span className="text-foreground tabular-nums w-10 text-right">{search.radius} km</span>
+                  </label>
+                )}
+                <div className="inline-flex rounded-md border border-border overflow-hidden">
+                  <button onClick={() => update({ view: "grid" })} className={`inline-flex items-center gap-1.5 text-xs px-3 py-1.5 transition ${search.view === "grid" ? "bg-primary/10 text-primary" : "bg-background hover:bg-secondary/40"}`}>
+                    <LayoutGrid className="h-3.5 w-3.5" /> Grid
+                  </button>
+                  <button onClick={() => update({ view: "map" })} className={`inline-flex items-center gap-1.5 text-xs px-3 py-1.5 border-l border-border transition ${search.view === "map" ? "bg-primary/10 text-primary" : "bg-background hover:bg-secondary/40"}`}>
+                    <MapIcon className="h-3.5 w-3.5" /> Map
+                  </button>
+                </div>
+              </div>
             </div>
 
             {!loading && results.length === 0 ? (
@@ -210,6 +233,14 @@ function Marketplace() {
                 </div>
                 {importMsg && <p className="mt-4 text-xs text-muted-foreground">{importMsg}</p>}
               </div>
+            ) : search.view === "map" ? (
+              <MarketplaceMap
+                listings={results}
+                center={coords}
+                radiusKm={coords ? search.radius : undefined}
+                onSelect={(l) => setSelectedId(l.id)}
+                selectedId={selectedId}
+              />
             ) : (
               <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-4">
                 {results.map((p) => <Card key={p.id} l={p} />)}
