@@ -3,6 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { MapPin, Star, ArrowUpRight, ShieldCheck } from "lucide-react";
 import { SiteNav } from "@/components/site-nav";
+import { SiteFooter } from "@/components/site-footer";
 import { listListings } from "@/lib/listings.functions";
 import { formatINR } from "@/lib/format";
 
