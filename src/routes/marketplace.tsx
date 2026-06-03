@@ -3,9 +3,11 @@ import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { zodValidator, fallback } from "@tanstack/zod-adapter";
 import { z } from "zod";
-import { MapPin, Search, Star, SlidersHorizontal, X, Loader2, ArrowUpRight, ShieldCheck } from "lucide-react";
+import { MapPin, Search, Star, SlidersHorizontal, X, Loader2, ArrowUpRight, ShieldCheck, Locate, Globe } from "lucide-react";
 import { SiteNav } from "@/components/site-nav";
+import { SiteFooter } from "@/components/site-footer";
 import { listListings } from "@/lib/listings.functions";
+import { searchPlacesPublic } from "@/lib/places.functions";
 import { BUDGET_BANDS, type BudgetBandId, SORT_OPTIONS, type SortId } from "@/lib/listings";
 import { formatINR } from "@/lib/format";
 
@@ -35,9 +37,13 @@ function Marketplace() {
   const search = Route.useSearch();
   const navigate = useNavigate({ from: Route.fullPath });
   const fetchListings = useServerFn(listListings);
+  const livePlaces = useServerFn(searchPlacesPublic);
   const [results, setResults] = useState<Listing[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [importing, setImporting] = useState(false);
+  const [importMsg, setImportMsg] = useState<string | null>(null);
 
   const update = (patch: Partial<typeof search>) =>
     navigate({ search: (p: typeof search) => ({ ...p, ...patch }), replace: true });
@@ -63,6 +69,44 @@ function Marketplace() {
       .then((r) => { setResults(r.listings); setTotal(r.total); })
       .finally(() => setLoading(false));
   }, [search.q, search.city, search.category, search.budget, search.minRating, search.sort, fetchListings]);
+
+  const useMyLocation = () => {
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(
+      (pos) => setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+      () => {},
+      { enableHighAccuracy: false, timeout: 6000 },
+    );
+  };
+
+  const runLiveSearch = async () => {
+    const cat = search.category === "all" ? undefined : search.category;
+    const baseQuery = search.q?.trim() || (cat ?? "photographer");
+    if (!search.city && !coords) {
+      setImportMsg("Add a city or use your location, then try again.");
+      return;
+    }
+    setImporting(true); setImportMsg(null);
+    try {
+      const res = await livePlaces({
+        data: {
+          query: baseQuery,
+          city: search.city || undefined,
+          category: cat,
+          lat: coords?.lat,
+          lng: coords?.lng,
+          radiusKm: coords ? 25 : undefined,
+        },
+      });
+      setImportMsg(`Imported ${res.count} real ${res.count === 1 ? "business" : "businesses"} from Google. Refreshing…`);
+      // re-trigger the list effect
+      navigate({ search: (p) => ({ ...p }), replace: true });
+    } catch (e) {
+      setImportMsg(e instanceof Error ? e.message : "Search failed");
+    } finally {
+      setImporting(false);
+    }
+  };
 
   return (
     <main className="min-h-screen">
@@ -108,6 +152,9 @@ function Marketplace() {
                   <MapPin className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                   <input value={search.city} onChange={(e) => update({ city: e.target.value })} placeholder="Any city in India" className="w-full rounded-md bg-background border border-border pl-8 pr-3 py-2 text-sm" />
                 </div>
+                <button onClick={useMyLocation} className="mt-2 w-full inline-flex items-center justify-center gap-1.5 text-xs px-3 py-2 rounded-md border border-border bg-background hover:bg-secondary/40 transition">
+                  <Locate className="h-3 w-3" /> {coords ? "Location set" : "Use my location"}
+                </button>
               </Group>
 
               <Group label="Budget">
@@ -151,12 +198,17 @@ function Marketplace() {
               <div className="rounded-2xl border border-dashed border-border bg-card/40 p-12 text-center">
                 <p className="text-foreground font-medium">No creators match yet.</p>
                 <p className="text-sm text-muted-foreground mt-2 max-w-md mx-auto">
-                  We only show real, verified businesses. New listings are added daily as creators sign up and admins import from public business directories.
+                  We only show real, verified businesses. Search public business directories live to import real creators in {search.city || "your area"}.
                 </p>
                 <div className="mt-6 flex flex-wrap items-center gap-2 justify-center">
+                  <button onClick={runLiveSearch} disabled={importing} className="text-sm rounded-md bg-[image:var(--gradient-gold)] text-primary-foreground px-4 py-2 inline-flex items-center gap-1.5 disabled:opacity-60">
+                    {importing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Globe className="h-4 w-4" />}
+                    Search Google for real creators
+                  </button>
                   <button onClick={reset} className="text-sm rounded-md border border-border px-4 py-2 hover:bg-secondary/40 transition">Reset filters</button>
                   <Link to="/onboarding-listing" className="text-sm rounded-md bg-[image:var(--gradient-gold)] text-primary-foreground px-4 py-2">List your business</Link>
                 </div>
+                {importMsg && <p className="mt-4 text-xs text-muted-foreground">{importMsg}</p>}
               </div>
             ) : (
               <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -166,6 +218,7 @@ function Marketplace() {
           </div>
         </div>
       </section>
+      <SiteFooter />
     </main>
   );
 }
