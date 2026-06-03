@@ -200,6 +200,7 @@ function CreatorProfile() {
           </aside>
         </div>
       </section>
+      <SiteFooter />
     </main>
   );
 }

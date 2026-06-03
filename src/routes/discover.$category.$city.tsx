@@ -92,6 +92,7 @@ function DiscoverPage() {
           )}
         </div>
       </section>
+      <SiteFooter />
     </main>
   );
 }
