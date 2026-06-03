@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { formatINR } from "@/lib/format";
-/// <reference types="google.maps" />
 
 type Listing = {
   id: string;
