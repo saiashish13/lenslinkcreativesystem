@@ -100,7 +100,7 @@ function Marketplace() {
       });
       setImportMsg(`Imported ${res.count} real ${res.count === 1 ? "business" : "businesses"} from Google. Refreshing…`);
       // re-trigger the list effect
-      navigate({ search: (p) => ({ ...p }), replace: true });
+      navigate({ search: (p: typeof search) => ({ ...p }), replace: true });
     } catch (e) {
       setImportMsg(e instanceof Error ? e.message : "Search failed");
     } finally {
