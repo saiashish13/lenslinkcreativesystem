@@ -451,6 +451,41 @@ function Group({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
+function ManualLocationForm({
+  value, onChange, busy, error, onApply,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  busy: boolean;
+  error: string | null;
+  onApply: () => void;
+}) {
+  return (
+    <div>
+      <form
+        onSubmit={(e) => { e.preventDefault(); onApply(); }}
+        className="flex gap-1.5"
+      >
+        <input
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="City or ZIP (e.g. Mumbai or 400001)"
+          className="flex-1 min-w-0 rounded-md bg-background border border-border px-3 py-2 text-xs"
+        />
+        <button
+          type="submit"
+          disabled={busy || !value.trim()}
+          className="text-xs px-3 py-2 rounded-md bg-[image:var(--gradient-gold)] text-primary-foreground inline-flex items-center gap-1 disabled:opacity-60"
+        >
+          {busy ? <Loader2 className="h-3 w-3 animate-spin" /> : <MapPin className="h-3 w-3" />}
+          Apply
+        </button>
+      </form>
+      {error && <p className="mt-1.5 text-[11px] text-amber-300">{error}</p>}
+    </div>
+  );
+}
+
 function Pills<T extends string>({ value, onChange, options }: { value: T; onChange: (v: T) => void; options: { v: T; l: string }[] }) {
   return (
     <div className="flex flex-wrap gap-1.5">
