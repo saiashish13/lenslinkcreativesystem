@@ -22,9 +22,10 @@ interface GeocodeResponse {
   }>;
 }
 
-function part(components: GeocodeResponse["results"] extends Array<infer R> ? R extends { address_components?: infer A } ? A : never : never, type: string): string | null {
-  if (!Array.isArray(components)) return null;
-  const c = (components as Array<{ long_name?: string; types?: string[] }>).find((x) => x.types?.includes(type));
+type AddressComponent = { long_name?: string; types?: string[] };
+function part(components: AddressComponent[] | undefined, type: string): string | null {
+  if (!components) return null;
+  const c = components.find((x) => x.types?.includes(type));
   return c?.long_name ?? null;
 }
 
