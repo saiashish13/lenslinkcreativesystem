@@ -3,12 +3,13 @@ import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { zodValidator, fallback } from "@tanstack/zod-adapter";
 import { z } from "zod";
-import { MapPin, Search, Star, SlidersHorizontal, X, Loader2, ArrowUpRight, ShieldCheck, Locate, Globe, Map as MapIcon, LayoutGrid } from "lucide-react";
+import { MapPin, Search, Star, SlidersHorizontal, X, Loader2, ArrowUpRight, ShieldCheck, Locate, Globe, Map as MapIcon, LayoutGrid, AlertCircle } from "lucide-react";
 import { SiteNav } from "@/components/site-nav";
 import { SiteFooter } from "@/components/site-footer";
 import { MarketplaceMap } from "@/components/marketplace-map";
 import { listListings } from "@/lib/listings.functions";
 import { searchPlacesPublic } from "@/lib/places.functions";
+import { geocodeLocation } from "@/lib/geo.functions";
 import { BUDGET_BANDS, type BudgetBandId, SORT_OPTIONS, type SortId } from "@/lib/listings";
 import { formatINR } from "@/lib/format";
 
@@ -41,10 +42,17 @@ function Marketplace() {
   const navigate = useNavigate({ from: Route.fullPath });
   const fetchListings = useServerFn(listListings);
   const livePlaces = useServerFn(searchPlacesPublic);
+  const geocode = useServerFn(geocodeLocation);
   const [results, setResults] = useState<Listing[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [coordsLabel, setCoordsLabel] = useState<string | null>(null);
+  const [coordsSource, setCoordsSource] = useState<"gps" | "manual" | null>(null);
+  const [geoStatus, setGeoStatus] = useState<"idle" | "prompting" | "granted" | "denied" | "unsupported" | "error">("idle");
+  const [manualQuery, setManualQuery] = useState("");
+  const [manualBusy, setManualBusy] = useState(false);
+  const [manualError, setManualError] = useState<string | null>(null);
   const [importing, setImporting] = useState(false);
   const [importMsg, setImportMsg] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -77,13 +85,66 @@ function Marketplace() {
       .finally(() => setLoading(false));
   }, [search.q, search.city, search.category, search.budget, search.minRating, search.sort, search.view, search.radius, coords, fetchListings]);
 
+  // On mount, check the Permissions API so we can present an accurate
+  // initial state without prompting the user.
+  useEffect(() => {
+    if (typeof navigator === "undefined" || !navigator.geolocation) {
+      setGeoStatus("unsupported");
+      return;
+    }
+    const perms = (navigator as Navigator & { permissions?: { query: (d: { name: PermissionName }) => Promise<PermissionStatus> } }).permissions;
+    if (!perms?.query) return;
+    perms.query({ name: "geolocation" as PermissionName })
+      .then((status) => {
+        if (status.state === "denied") setGeoStatus("denied");
+        else if (status.state === "granted") setGeoStatus("granted");
+        status.onchange = () => {
+          if (status.state === "denied") setGeoStatus("denied");
+          else if (status.state === "granted") setGeoStatus("granted");
+        };
+      })
+      .catch(() => {});
+  }, []);
+
   const useMyLocation = () => {
-    if (!navigator.geolocation) return;
+    if (!navigator.geolocation) { setGeoStatus("unsupported"); return; }
+    setGeoStatus("prompting");
     navigator.geolocation.getCurrentPosition(
-      (pos) => setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-      () => {},
-      { enableHighAccuracy: false, timeout: 6000 },
+      (pos) => {
+        setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        setCoordsLabel("Your current location");
+        setCoordsSource("gps");
+        setGeoStatus("granted");
+      },
+      (err) => {
+        if (err.code === err.PERMISSION_DENIED) setGeoStatus("denied");
+        else setGeoStatus("error");
+      },
+      { enableHighAccuracy: false, timeout: 8000, maximumAge: 5 * 60 * 1000 },
     );
+  };
+
+  const applyManualLocation = async (raw?: string) => {
+    const query = (raw ?? manualQuery).trim();
+    if (!query) { setManualError("Enter a city or ZIP code."); return; }
+    setManualBusy(true); setManualError(null);
+    try {
+      const r = await geocode({ data: { query } });
+      setCoords({ lat: r.lat, lng: r.lng });
+      setCoordsLabel(r.formatted);
+      setCoordsSource("manual");
+      if (r.city) update({ city: r.city });
+    } catch (e) {
+      setManualError(e instanceof Error ? e.message : "Couldn't locate that place.");
+    } finally {
+      setManualBusy(false);
+    }
+  };
+
+  const clearLocation = () => {
+    setCoords(null);
+    setCoordsLabel(null);
+    setCoordsSource(null);
   };
 
   const runLiveSearch = async () => {
@@ -159,9 +220,83 @@ function Marketplace() {
                   <MapPin className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                   <input value={search.city} onChange={(e) => update({ city: e.target.value })} placeholder="Any city in India" className="w-full rounded-md bg-background border border-border pl-8 pr-3 py-2 text-sm" />
                 </div>
-                <button onClick={useMyLocation} className="mt-2 w-full inline-flex items-center justify-center gap-1.5 text-xs px-3 py-2 rounded-md border border-border bg-background hover:bg-secondary/40 transition">
-                  <Locate className="h-3 w-3" /> {coords ? "Location set" : "Use my location"}
-                </button>
+
+                {/* Geolocation flow */}
+                {coords ? (
+                  <div className="mt-2 rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-xs">
+                    <div className="flex items-start gap-2">
+                      <Locate className="h-3.5 w-3.5 text-primary mt-0.5 shrink-0" />
+                      <div className="min-w-0 flex-1">
+                        <div className="text-foreground truncate" title={coordsLabel ?? undefined}>{coordsLabel ?? "Location set"}</div>
+                        <div className="text-muted-foreground mt-0.5">
+                          {coordsSource === "gps" ? "From your device" : "Manual entry"} · {search.radius} km radius
+                        </div>
+                      </div>
+                      <button onClick={clearLocation} aria-label="Clear location" className="text-muted-foreground hover:text-foreground">
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ) : geoStatus === "denied" || geoStatus === "unsupported" || geoStatus === "error" ? (
+                  <div className="mt-2 space-y-2">
+                    <div className="flex items-start gap-2 rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-200">
+                      <AlertCircle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                      <div>
+                        {geoStatus === "denied" && "Location access is blocked. Enter a city or ZIP to filter by radius."}
+                        {geoStatus === "unsupported" && "Your browser doesn't support location. Use city or ZIP instead."}
+                        {geoStatus === "error" && "We couldn't read your location. Try entering a city or ZIP."}
+                      </div>
+                    </div>
+                    <ManualLocationForm
+                      value={manualQuery}
+                      onChange={setManualQuery}
+                      busy={manualBusy}
+                      error={manualError}
+                      onApply={() => applyManualLocation()}
+                    />
+                  </div>
+                ) : (
+                  <div className="mt-2 space-y-2">
+                    <button
+                      onClick={useMyLocation}
+                      disabled={geoStatus === "prompting"}
+                      className="w-full inline-flex items-center justify-center gap-1.5 text-xs px-3 py-2 rounded-md border border-border bg-background hover:bg-secondary/40 transition disabled:opacity-60"
+                    >
+                      {geoStatus === "prompting" ? <Loader2 className="h-3 w-3 animate-spin" /> : <Locate className="h-3 w-3" />}
+                      {geoStatus === "prompting" ? "Waiting for permission…" : "Use my location"}
+                    </button>
+                    <details className="text-xs">
+                      <summary className="cursor-pointer text-muted-foreground hover:text-foreground select-none">Or enter city / ZIP</summary>
+                      <div className="mt-2">
+                        <ManualLocationForm
+                          value={manualQuery}
+                          onChange={setManualQuery}
+                          busy={manualBusy}
+                          error={manualError}
+                          onApply={() => applyManualLocation()}
+                        />
+                      </div>
+                    </details>
+                  </div>
+                )}
+
+                {coords && (
+                  <div className="mt-3">
+                    <div className="flex items-center justify-between text-[11px] text-muted-foreground mb-1">
+                      <span>Radius</span>
+                      <span className="tabular-nums text-foreground">{search.radius} km</span>
+                    </div>
+                    <input
+                      type="range"
+                      min={1}
+                      max={100}
+                      step={1}
+                      value={search.radius}
+                      onChange={(e) => update({ radius: Number(e.target.value) })}
+                      className="accent-primary w-full"
+                    />
+                  </div>
+                )}
               </Group>
 
               <Group label="Budget">
