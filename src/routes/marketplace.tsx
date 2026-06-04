@@ -202,7 +202,7 @@ function Marketplace() {
                 {loading && <Loader2 className="h-4 w-4 animate-spin" />}
               </div>
               <div className="inline-flex items-center gap-2">
-                {search.view === "map" && coords && (
+                {coords && (
                   <label className="inline-flex items-center gap-2 text-xs">
                     <span>Radius</span>
                     <input type="range" min={1} max={100} step={1} value={search.radius} onChange={(e) => update({ radius: Number(e.target.value) })} className="accent-primary w-28" />
