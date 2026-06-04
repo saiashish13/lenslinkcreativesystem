@@ -16,6 +16,9 @@ const ListInput = z.object({
   sort: z.enum(["price_asc", "rating_desc", "reviews_desc"]).optional().default("price_asc"),
   limit: z.number().int().min(1).max(60).optional().default(30),
   offset: z.number().int().min(0).optional().default(0),
+  lat: z.number().min(-90).max(90).optional(),
+  lng: z.number().min(-180).max(180).optional(),
+  radiusKm: z.number().min(0.5).max(500).optional(),
 });
 
 export const listListings = createServerFn({ method: "POST" })
@@ -34,6 +37,22 @@ export const listListings = createServerFn({ method: "POST" })
     if (data.maxPrice != null) q = q.or(`max_price_inr.lte.${data.maxPrice},max_price_inr.is.null`);
     if (data.verifiedOnly) q = q.in("verification_status", ["id_verified", "business_verified"]);
 
+    const hasGeo = data.lat != null && data.lng != null && data.radiusKm != null;
+    if (hasGeo) {
+      const lat = data.lat!;
+      const lng = data.lng!;
+      const r = data.radiusKm!;
+      const dLat = r / 111;
+      const dLng = r / (111 * Math.max(Math.cos((lat * Math.PI) / 180), 0.01));
+      q = q
+        .not("lat", "is", null)
+        .not("lng", "is", null)
+        .gte("lat", lat - dLat)
+        .lte("lat", lat + dLat)
+        .gte("lng", lng - dLng)
+        .lte("lng", lng + dLng);
+    }
+
     switch (data.sort) {
       case "rating_desc":
         q = q.order("places_rating", { ascending: false, nullsFirst: false }).order("places_review_count", { ascending: false });
@@ -46,11 +65,39 @@ export const listListings = createServerFn({ method: "POST" })
         q = q.order("min_price_inr", { ascending: true, nullsFirst: false }).order("places_rating", { ascending: false, nullsFirst: false });
     }
 
-    q = q.range(data.offset, data.offset + data.limit - 1);
+    if (hasGeo) {
+      q = q.range(0, Math.min(data.offset + data.limit, 200) - 1);
+    } else {
+      q = q.range(data.offset, data.offset + data.limit - 1);
+    }
 
     const { data: rows, count, error } = await q;
     if (error) throw new Error(error.message);
-    return { listings: rows ?? [], total: count ?? 0 };
+
+    if (!hasGeo) {
+      return { listings: rows ?? [], total: count ?? 0 };
+    }
+
+    const lat = data.lat!;
+    const lng = data.lng!;
+    const r = data.radiusKm!;
+    const R = 6371;
+    const within: Array<{ row: NonNullable<typeof rows>[number]; km: number }> = [];
+    for (const row of rows ?? []) {
+      if (row.lat == null || row.lng == null) continue;
+      const dLat = ((row.lat - lat) * Math.PI) / 180;
+      const dLng = ((row.lng - lng) * Math.PI) / 180;
+      const s =
+        Math.sin(dLat / 2) ** 2 +
+        Math.cos((lat * Math.PI) / 180) *
+          Math.cos((row.lat * Math.PI) / 180) *
+          Math.sin(dLng / 2) ** 2;
+      const km = 2 * R * Math.asin(Math.sqrt(s));
+      if (km <= r) within.push({ row, km });
+    }
+    const total = within.length;
+    const page = within.slice(data.offset, data.offset + data.limit).map((x) => x.row);
+    return { listings: page, total };
   });
 
 export const getListingBySlug = createServerFn({ method: "POST" })

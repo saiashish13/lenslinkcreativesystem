@@ -68,11 +68,14 @@ function Marketplace() {
         maxPrice: band?.max,
         sort: search.sort as SortId as "price_asc" | "rating_desc" | "reviews_desc",
         limit: search.view === "map" ? 60 : 30,
+        lat: coords?.lat,
+        lng: coords?.lng,
+        radiusKm: coords ? search.radius : undefined,
       },
     })
       .then((r) => { setResults(r.listings); setTotal(r.total); })
       .finally(() => setLoading(false));
-  }, [search.q, search.city, search.category, search.budget, search.minRating, search.sort, search.view, fetchListings]);
+  }, [search.q, search.city, search.category, search.budget, search.minRating, search.sort, search.view, search.radius, coords, fetchListings]);
 
   const useMyLocation = () => {
     if (!navigator.geolocation) return;
@@ -199,7 +202,7 @@ function Marketplace() {
                 {loading && <Loader2 className="h-4 w-4 animate-spin" />}
               </div>
               <div className="inline-flex items-center gap-2">
-                {search.view === "map" && coords && (
+                {coords && (
                   <label className="inline-flex items-center gap-2 text-xs">
                     <span>Radius</span>
                     <input type="range" min={1} max={100} step={1} value={search.radius} onChange={(e) => update({ radius: Number(e.target.value) })} className="accent-primary w-28" />
