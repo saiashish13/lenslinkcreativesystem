@@ -68,11 +68,14 @@ function Marketplace() {
         maxPrice: band?.max,
         sort: search.sort as SortId as "price_asc" | "rating_desc" | "reviews_desc",
         limit: search.view === "map" ? 60 : 30,
+        lat: coords?.lat,
+        lng: coords?.lng,
+        radiusKm: coords ? search.radius : undefined,
       },
     })
       .then((r) => { setResults(r.listings); setTotal(r.total); })
       .finally(() => setLoading(false));
-  }, [search.q, search.city, search.category, search.budget, search.minRating, search.sort, search.view, fetchListings]);
+  }, [search.q, search.city, search.category, search.budget, search.minRating, search.sort, search.view, search.radius, coords, fetchListings]);
 
   const useMyLocation = () => {
     if (!navigator.geolocation) return;
