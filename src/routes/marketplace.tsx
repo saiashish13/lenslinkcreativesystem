@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { zodValidator, fallback } from "@tanstack/zod-adapter";
 import { z } from "zod";
 import { MapPin, Search, Star, SlidersHorizontal, X, Loader2, ArrowUpRight, ShieldCheck, Locate, Globe, Map as MapIcon, LayoutGrid, AlertCircle } from "lucide-react";
@@ -12,6 +12,8 @@ import { searchPlacesPublic } from "@/lib/places.functions";
 import { geocodeLocation } from "@/lib/geo.functions";
 import { BUDGET_BANDS, type BudgetBandId, SORT_OPTIONS, type SortId } from "@/lib/listings";
 import { formatINR } from "@/lib/format";
+import { useAuth } from "@/hooks/use-auth";
+import { supabase } from "@/integrations/supabase/client";
 
 const searchSchema = z.object({
   q: fallback(z.string(), "").default(""),
@@ -56,6 +58,56 @@ function Marketplace() {
   const [importing, setImporting] = useState(false);
   const [importMsg, setImportMsg] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const { user } = useAuth();
+  const prefsLoadedRef = useRef(false);
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Load saved location preference from profile on sign-in.
+  useEffect(() => {
+    if (!user) { prefsLoadedRef.current = true; return; }
+    let cancelled = false;
+    prefsLoadedRef.current = false;
+    supabase
+      .from("profiles")
+      .select("pref_lat,pref_lng,pref_location_label,pref_location_source,pref_radius_km")
+      .eq("id", user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (cancelled) return;
+        if (data?.pref_lat != null && data?.pref_lng != null) {
+          setCoords({ lat: data.pref_lat, lng: data.pref_lng });
+          setCoordsLabel(data.pref_location_label ?? "Saved location");
+          setCoordsSource((data.pref_location_source as "gps" | "manual") ?? "manual");
+          if (data.pref_radius_km && data.pref_radius_km !== search.radius) {
+            update({ radius: data.pref_radius_km });
+          }
+        }
+        prefsLoadedRef.current = true;
+      });
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
+
+  // Persist location preference (debounced).
+  useEffect(() => {
+    if (!user || !prefsLoadedRef.current) return;
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(() => {
+      supabase
+        .from("profiles")
+        .update({
+          pref_lat: coords?.lat ?? null,
+          pref_lng: coords?.lng ?? null,
+          pref_location_label: coords ? coordsLabel : null,
+          pref_location_source: coords ? coordsSource : null,
+          pref_radius_km: coords ? search.radius : null,
+        })
+        .eq("id", user.id)
+        .then(() => {});
+    }, 500);
+    return () => { if (saveTimerRef.current) clearTimeout(saveTimerRef.current); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, coords?.lat, coords?.lng, coordsLabel, coordsSource, search.radius]);
 
   const update = (patch: Partial<typeof search>) =>
     navigate({ search: (p: typeof search) => ({ ...p, ...patch }), replace: true });
