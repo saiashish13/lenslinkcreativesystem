@@ -590,6 +590,11 @@ export type Database = {
           full_name: string | null
           id: string
           phone: string | null
+          pref_lat: number | null
+          pref_lng: number | null
+          pref_location_label: string | null
+          pref_location_source: string | null
+          pref_radius_km: number | null
           updated_at: string
         }
         Insert: {
@@ -599,6 +604,11 @@ export type Database = {
           full_name?: string | null
           id: string
           phone?: string | null
+          pref_lat?: number | null
+          pref_lng?: number | null
+          pref_location_label?: string | null
+          pref_location_source?: string | null
+          pref_radius_km?: number | null
           updated_at?: string
         }
         Update: {
@@ -608,6 +618,11 @@ export type Database = {
           full_name?: string | null
           id?: string
           phone?: string | null
+          pref_lat?: number | null
+          pref_lng?: number | null
+          pref_location_label?: string | null
+          pref_location_source?: string | null
+          pref_radius_km?: number | null
           updated_at?: string
         }
         Relationships: []
