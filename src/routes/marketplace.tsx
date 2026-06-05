@@ -47,7 +47,7 @@ function Marketplace() {
   const geocode = useServerFn(geocodeLocation);
   const [results, setResults] = useState<Listing[]>([]);
   const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [coordsLabel, setCoordsLabel] = useState<string | null>(null);
   const [coordsSource, setCoordsSource] = useState<"gps" | "manual" | null>(null);
@@ -58,8 +58,8 @@ function Marketplace() {
   const [importing, setImporting] = useState(false);
   const [importMsg, setImportMsg] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [prefsReady, setPrefsReady] = useState(false);
   const { user } = useAuth();
-  const prefsLoadedRef = useRef(false);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Load saved location preference from profile on sign-in.
