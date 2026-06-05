@@ -142,6 +142,7 @@ function Marketplace() {
     navigate({ search: { q: "", city: "", category: "all", budget: "any", minRating: 0, sort: "price_asc", view: search.view, radius: search.radius } });
 
   useEffect(() => {
+    if (!prefsReady) return;
     setLoading(true);
     const band = search.budget !== "any" ? BUDGET_BANDS.find((b) => b.id === (search.budget as BudgetBandId)) : null;
     fetchListings({
@@ -161,7 +162,7 @@ function Marketplace() {
     })
       .then((r) => { setResults(r.listings); setTotal(r.total); })
       .finally(() => setLoading(false));
-  }, [search.q, search.city, search.category, search.budget, search.minRating, search.sort, search.view, search.radius, coords, fetchListings]);
+  }, [search.q, search.city, search.category, search.budget, search.minRating, search.sort, search.view, search.radius, coords, fetchListings, prefsReady]);
 
   // On mount, check the Permissions API so we can present an accurate
   // initial state without prompting the user.
