@@ -62,52 +62,78 @@ function Marketplace() {
   const { user } = useAuth();
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Load saved location preference from profile on sign-in.
+  // Load saved location preference from profile (logged-in) or localStorage (guest).
   useEffect(() => {
-    if (!user) { prefsLoadedRef.current = true; return; }
     let cancelled = false;
-    prefsLoadedRef.current = false;
-    supabase
-      .from("profiles")
-      .select("pref_lat,pref_lng,pref_location_label,pref_location_source,pref_radius_km")
-      .eq("id", user.id)
-      .maybeSingle()
-      .then(({ data }) => {
+    const load = async () => {
+      if (user) {
+        const { data } = await supabase
+          .from("profiles")
+          .select("pref_lat,pref_lng,pref_location_label,pref_location_source,pref_radius_km")
+          .eq("id", user.id)
+          .maybeSingle();
         if (cancelled) return;
         if (data?.pref_lat != null && data?.pref_lng != null) {
           setCoords({ lat: data.pref_lat, lng: data.pref_lng });
           setCoordsLabel(data.pref_location_label ?? "Saved location");
           setCoordsSource((data.pref_location_source as "gps" | "manual") ?? "manual");
           if (data.pref_radius_km && data.pref_radius_km !== search.radius) {
-            update({ radius: data.pref_radius_km });
+            navigate({ search: (p: typeof search) => ({ ...p, radius: data.pref_radius_km }), replace: true });
           }
         }
-        prefsLoadedRef.current = true;
-      });
+      } else {
+        const raw = localStorage.getItem("marketplace_location_prefs");
+        if (raw) {
+          try {
+            const p = JSON.parse(raw);
+            if (p.lat != null && p.lng != null) {
+              setCoords({ lat: p.lat, lng: p.lng });
+              setCoordsLabel(p.label ?? "Saved location");
+              setCoordsSource(p.source ?? "manual");
+              if (p.radius && p.radius !== search.radius) {
+                navigate({ search: (prev: typeof search) => ({ ...prev, radius: p.radius }), replace: true });
+              }
+            }
+          } catch {}
+        }
+      }
+      if (!cancelled) setPrefsReady(true);
+    };
+    load();
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
-  // Persist location preference (debounced).
+  // Persist location preference (debounced). Saves to profile when logged-in and to localStorage for guests / backup.
   useEffect(() => {
-    if (!user || !prefsLoadedRef.current) return;
+    if (!prefsReady) return;
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     saveTimerRef.current = setTimeout(() => {
-      supabase
-        .from("profiles")
-        .update({
-          pref_lat: coords?.lat ?? null,
-          pref_lng: coords?.lng ?? null,
-          pref_location_label: coords ? coordsLabel : null,
-          pref_location_source: coords ? coordsSource : null,
-          pref_radius_km: coords ? search.radius : null,
-        })
-        .eq("id", user.id)
-        .then(() => {});
+      const payload = {
+        pref_lat: coords?.lat ?? null,
+        pref_lng: coords?.lng ?? null,
+        pref_location_label: coords ? coordsLabel : null,
+        pref_location_source: coords ? coordsSource : null,
+        pref_radius_km: coords ? search.radius : null,
+      };
+      if (user) {
+        supabase.from("profiles").update(payload).eq("id", user.id).then(() => {});
+      }
+      if (coords) {
+        localStorage.setItem("marketplace_location_prefs", JSON.stringify({
+          lat: coords.lat,
+          lng: coords.lng,
+          label: coordsLabel,
+          source: coordsSource,
+          radius: search.radius,
+        }));
+      } else {
+        localStorage.removeItem("marketplace_location_prefs");
+      }
     }, 500);
     return () => { if (saveTimerRef.current) clearTimeout(saveTimerRef.current); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id, coords?.lat, coords?.lng, coordsLabel, coordsSource, search.radius]);
+  }, [user?.id, coords?.lat, coords?.lng, coordsLabel, coordsSource, search.radius, prefsReady]);
 
   const update = (patch: Partial<typeof search>) =>
     navigate({ search: (p: typeof search) => ({ ...p, ...patch }), replace: true });
