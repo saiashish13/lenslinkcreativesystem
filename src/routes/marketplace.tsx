@@ -3,7 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef, useState } from "react";
 import { zodValidator, fallback } from "@tanstack/zod-adapter";
 import { z } from "zod";
-import { MapPin, Search, Star, SlidersHorizontal, X, Loader2, ArrowUpRight, ShieldCheck, Locate, Globe, Map as MapIcon, LayoutGrid, AlertCircle } from "lucide-react";
+import { MapPin, Search, Star, SlidersHorizontal, X, Loader2, ArrowUpRight, ShieldCheck, Locate, Globe, Map as MapIcon, LayoutGrid, AlertCircle, Trash2 } from "lucide-react";
 import { SiteNav } from "@/components/site-nav";
 import { SiteFooter } from "@/components/site-footer";
 import { MarketplaceMap } from "@/components/marketplace-map";
@@ -220,10 +220,24 @@ function Marketplace() {
     }
   };
 
-  const clearLocation = () => {
+  const clearLocation = async () => {
     setCoords(null);
     setCoordsLabel(null);
     setCoordsSource(null);
+    setGeoStatus("idle");
+    localStorage.removeItem("marketplace_location_prefs");
+    if (user) {
+      await supabase.from("profiles").update({
+        pref_lat: null,
+        pref_lng: null,
+        pref_location_label: null,
+        pref_location_source: null,
+        pref_radius_km: null,
+      }).eq("id", user.id);
+    }
+    if (search.radius !== 25) {
+      navigate({ search: (p: typeof search) => ({ ...p, radius: 25 }), replace: true });
+    }
   };
 
   const runLiveSearch = async () => {
@@ -311,10 +325,13 @@ function Marketplace() {
                           {coordsSource === "gps" ? "From your device" : "Manual entry"} · {search.radius} km radius
                         </div>
                       </div>
-                      <button onClick={clearLocation} aria-label="Clear location" className="text-muted-foreground hover:text-foreground">
-                        <X className="h-3.5 w-3.5" />
-                      </button>
                     </div>
+                    <button
+                      onClick={clearLocation}
+                      className="mt-2 w-full inline-flex items-center justify-center gap-1.5 rounded-md border border-destructive/30 bg-destructive/10 px-2 py-1.5 text-[11px] text-destructive hover:bg-destructive/20 transition"
+                    >
+                      <Trash2 className="h-3 w-3" /> Clear saved location
+                    </button>
                   </div>
                 ) : geoStatus === "denied" || geoStatus === "unsupported" || geoStatus === "error" ? (
                   <div className="mt-2 space-y-2">
@@ -417,11 +434,20 @@ function Marketplace() {
               </div>
               <div className="inline-flex items-center gap-2">
                 {coords && (
-                  <label className="inline-flex items-center gap-2 text-xs">
-                    <span>Radius</span>
-                    <input type="range" min={1} max={100} step={1} value={search.radius} onChange={(e) => update({ radius: Number(e.target.value) })} className="accent-primary w-28" />
-                    <span className="text-foreground tabular-nums w-10 text-right">{search.radius} km</span>
-                  </label>
+                  <>
+                    <label className="inline-flex items-center gap-2 text-xs">
+                      <span>Radius</span>
+                      <input type="range" min={1} max={100} step={1} value={search.radius} onChange={(e) => update({ radius: Number(e.target.value) })} className="accent-primary w-28" />
+                      <span className="text-foreground tabular-nums w-10 text-right">{search.radius} km</span>
+                    </label>
+                    <button
+                      onClick={clearLocation}
+                      title="Clear saved location"
+                      className="inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-md border border-destructive/30 text-destructive hover:bg-destructive/10 transition"
+                    >
+                      <Trash2 className="h-3 w-3" /> Clear
+                    </button>
+                  </>
                 )}
                 <div className="inline-flex rounded-md border border-border overflow-hidden">
                   <button onClick={() => update({ view: "grid" })} className={`inline-flex items-center gap-1.5 text-xs px-3 py-1.5 transition ${search.view === "grid" ? "bg-primary/10 text-primary" : "bg-background hover:bg-secondary/40"}`}>
