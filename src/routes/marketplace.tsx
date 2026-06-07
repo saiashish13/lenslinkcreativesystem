@@ -325,10 +325,13 @@ function Marketplace() {
                           {coordsSource === "gps" ? "From your device" : "Manual entry"} · {search.radius} km radius
                         </div>
                       </div>
-                      <button onClick={clearLocation} aria-label="Clear location" className="text-muted-foreground hover:text-foreground">
-                        <X className="h-3.5 w-3.5" />
-                      </button>
                     </div>
+                    <button
+                      onClick={clearLocation}
+                      className="mt-2 w-full inline-flex items-center justify-center gap-1.5 rounded-md border border-destructive/30 bg-destructive/10 px-2 py-1.5 text-[11px] text-destructive hover:bg-destructive/20 transition"
+                    >
+                      <Trash2 className="h-3 w-3" /> Clear saved location
+                    </button>
                   </div>
                 ) : geoStatus === "denied" || geoStatus === "unsupported" || geoStatus === "error" ? (
                   <div className="mt-2 space-y-2">
