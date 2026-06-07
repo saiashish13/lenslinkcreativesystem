@@ -434,11 +434,20 @@ function Marketplace() {
               </div>
               <div className="inline-flex items-center gap-2">
                 {coords && (
-                  <label className="inline-flex items-center gap-2 text-xs">
-                    <span>Radius</span>
-                    <input type="range" min={1} max={100} step={1} value={search.radius} onChange={(e) => update({ radius: Number(e.target.value) })} className="accent-primary w-28" />
-                    <span className="text-foreground tabular-nums w-10 text-right">{search.radius} km</span>
-                  </label>
+                  <>
+                    <label className="inline-flex items-center gap-2 text-xs">
+                      <span>Radius</span>
+                      <input type="range" min={1} max={100} step={1} value={search.radius} onChange={(e) => update({ radius: Number(e.target.value) })} className="accent-primary w-28" />
+                      <span className="text-foreground tabular-nums w-10 text-right">{search.radius} km</span>
+                    </label>
+                    <button
+                      onClick={clearLocation}
+                      title="Clear saved location"
+                      className="inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-md border border-destructive/30 text-destructive hover:bg-destructive/10 transition"
+                    >
+                      <Trash2 className="h-3 w-3" /> Clear
+                    </button>
+                  </>
                 )}
                 <div className="inline-flex rounded-md border border-border overflow-hidden">
                   <button onClick={() => update({ view: "grid" })} className={`inline-flex items-center gap-1.5 text-xs px-3 py-1.5 transition ${search.view === "grid" ? "bg-primary/10 text-primary" : "bg-background hover:bg-secondary/40"}`}>
