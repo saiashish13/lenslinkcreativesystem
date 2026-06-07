@@ -220,10 +220,24 @@ function Marketplace() {
     }
   };
 
-  const clearLocation = () => {
+  const clearLocation = async () => {
     setCoords(null);
     setCoordsLabel(null);
     setCoordsSource(null);
+    setGeoStatus("idle");
+    localStorage.removeItem("marketplace_location_prefs");
+    if (user) {
+      await supabase.from("profiles").update({
+        pref_lat: null,
+        pref_lng: null,
+        pref_location_label: null,
+        pref_location_source: null,
+        pref_radius_km: null,
+      }).eq("id", user.id);
+    }
+    if (search.radius !== 25) {
+      navigate({ search: (p: typeof search) => ({ ...p, radius: 25 }), replace: true });
+    }
   };
 
   const runLiveSearch = async () => {
