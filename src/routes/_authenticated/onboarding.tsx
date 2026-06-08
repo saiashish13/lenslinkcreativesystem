@@ -12,9 +12,27 @@ export const Route = createFileRoute("/_authenticated/onboarding")({
 });
 
 const ROLES = [
-  { key: "customer", title: "I'm a Customer", desc: "Hire photographers, videographers and editors", Icon: ShoppingBag, href: "/app" },
-  { key: "photographer", title: "I'm a Creator", desc: "Photographer or videographer offering services", Icon: Camera, href: "/pro" },
-  { key: "editor", title: "I'm an Editor", desc: "Post-production: photo and video editing", Icon: Scissors, href: "/editor" },
+  {
+    key: "customer",
+    title: "I'm a Customer",
+    desc: "Hire photographers, videographers and editors",
+    Icon: ShoppingBag,
+    href: "/app",
+  },
+  {
+    key: "photographer",
+    title: "I'm a Creator",
+    desc: "Photographer or videographer offering services",
+    Icon: Camera,
+    href: "/pro",
+  },
+  {
+    key: "editor",
+    title: "I'm an Editor",
+    desc: "Post-production: photo and video editing",
+    Icon: Scissors,
+    href: "/editor",
+  },
 ] as const;
 
 function Onboarding() {
@@ -23,7 +41,7 @@ function Onboarding() {
   const saveRole = useServerFn(chooseOwnRole);
   const [saving, setSaving] = useState<string | null>(null);
 
-  const choose = async (role: typeof ROLES[number]) => {
+  const choose = async (role: (typeof ROLES)[number]) => {
     if (!user) return;
     setSaving(role.key);
     try {
@@ -42,7 +60,9 @@ function Onboarding() {
     <div className="min-h-screen bg-background px-4 py-16">
       <div className="max-w-3xl mx-auto">
         <h1 className="font-display text-4xl text-center">Welcome — how will you use LensLink?</h1>
-        <p className="text-muted-foreground text-center mt-2">You can change this later from your profile.</p>
+        <p className="text-muted-foreground text-center mt-2">
+          You can change this later from your profile.
+        </p>
         <div className="grid sm:grid-cols-3 gap-4 mt-10">
           {ROLES.map((r) => (
             <button
