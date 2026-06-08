@@ -1,9 +1,10 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Camera, Scissors, ShoppingBag } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { chooseOwnRole } from "@/lib/roles.functions";
 
 export const Route = createFileRoute("/_authenticated/onboarding")({
   head: () => ({ meta: [{ title: "Choose your role — LensLink AI" }] }),
@@ -19,24 +20,22 @@ const ROLES = [
 function Onboarding() {
   const { user, refreshRoles } = useAuth();
   const router = useRouter();
+  const saveRole = useServerFn(chooseOwnRole);
   const [saving, setSaving] = useState<string | null>(null);
 
   const choose = async (role: typeof ROLES[number]) => {
     if (!user) return;
     setSaving(role.key);
-    // Remove default customer if picking something else; otherwise just ensure row exists
-    if (role.key !== "customer") {
-      await supabase.from("user_roles").delete().eq("user_id", user.id).eq("role", "customer");
+    try {
+      await saveRole({ data: { role: role.key } });
+      await refreshRoles();
+      toast.success("Role saved");
+      router.navigate({ to: role.href });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not save role");
+    } finally {
+      setSaving(null);
     }
-    const { error } = await supabase.from("user_roles").upsert(
-      { user_id: user.id, role: role.key },
-      { onConflict: "user_id,role" }
-    );
-    setSaving(null);
-    if (error) return toast.error(error.message);
-    await refreshRoles();
-    toast.success("Role saved");
-    router.navigate({ to: role.href });
   };
 
   return (
