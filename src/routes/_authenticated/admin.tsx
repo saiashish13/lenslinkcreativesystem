@@ -32,19 +32,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
 const ALL_ROLES: AppRole[] = ["customer", "photographer", "editor", "admin"];
 
 function AdminDash() {
-  const { roles, loading } = useAuth();
-  const router = useRouter();
-  useEffect(() => {
-    if (!loading && !roles.includes("admin")) router.navigate({ to: "/app" });
-  }, [loading, roles, router]);
-
-  if (!roles.includes("admin")) {
-    return (
-      <DashShell title="Admin console" subtitle="Restricted area">
-        <div className="text-muted-foreground">Redirecting…</div>
-      </DashShell>
-    );
-  }
+  useAuth();
 
   return (
     <DashShell title="Admin console" subtitle="Marketplace, users, payments, moderation.">
