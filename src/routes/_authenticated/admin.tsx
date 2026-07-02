@@ -1,5 +1,5 @@
-import { createFileRoute, useRouter } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { createFileRoute, redirect } from "@tanstack/react-router";
+import { useMemo, useState } from "react";
 import { DashShell } from "@/components/dash-shell";
 import { useAuth } from "@/hooks/use-auth";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -16,28 +16,23 @@ import {
 import { formatINR } from "@/lib/format";
 import { toast } from "sonner";
 import type { AppRole } from "@/hooks/use-auth";
+import { getMyRoles } from "@/lib/roles.functions";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({ meta: [{ title: "Admin — LensLink AI" }] }),
+  beforeLoad: async () => {
+    const { roles } = await getMyRoles();
+    if (!roles.includes("admin")) {
+      throw redirect({ to: "/app" });
+    }
+  },
   component: AdminDash,
 });
 
 const ALL_ROLES: AppRole[] = ["customer", "photographer", "editor", "admin"];
 
 function AdminDash() {
-  const { roles, loading } = useAuth();
-  const router = useRouter();
-  useEffect(() => {
-    if (!loading && !roles.includes("admin")) router.navigate({ to: "/app" });
-  }, [loading, roles, router]);
-
-  if (!roles.includes("admin")) {
-    return (
-      <DashShell title="Admin console" subtitle="Restricted area">
-        <div className="text-muted-foreground">Redirecting…</div>
-      </DashShell>
-    );
-  }
+  useAuth();
 
   return (
     <DashShell title="Admin console" subtitle="Marketplace, users, payments, moderation.">

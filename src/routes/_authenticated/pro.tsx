@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { redirect } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { CalendarPlus, Check, ImagePlus, IndianRupee, Loader2, MessageSquare, Plus, Sparkles, Trash2, Wand2, X } from "lucide-react";
@@ -13,6 +14,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { formatINR } from "@/lib/format";
 import { generateCaption, suggestPricing } from "@/lib/creator-ai.functions";
+import { getMyRoles } from "@/lib/roles.functions";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useCreatorAssignments } from "@/hooks/use-editor-data";
@@ -21,6 +23,12 @@ import { ChatPanel } from "@/components/chat-panel";
 
 export const Route = createFileRoute("/_authenticated/pro")({
   head: () => ({ meta: [{ title: "Creator dashboard — LensLink AI" }] }),
+  beforeLoad: async () => {
+    const { roles } = await getMyRoles();
+    if (!roles.includes("photographer") && !roles.includes("admin")) {
+      throw redirect({ to: "/onboarding" });
+    }
+  },
   component: ProDash,
 });
 
