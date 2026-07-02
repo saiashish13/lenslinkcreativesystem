@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useState } from "react";
 import { Check, FileUp, Loader2, MessageSquare, Sparkles, Upload, X } from "lucide-react";
 import { DashShell } from "@/components/dash-shell";
@@ -14,9 +14,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { formatINR } from "@/lib/format";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { getMyRoles } from "@/lib/roles.functions";
 
 export const Route = createFileRoute("/_authenticated/editor")({
   head: () => ({ meta: [{ title: "Editor workspace — LensLink AI" }] }),
+  beforeLoad: async () => {
+    const { roles } = await getMyRoles();
+    if (!roles.includes("editor") && !roles.includes("admin")) {
+      throw redirect({ to: "/onboarding" });
+    }
+  },
   component: EditorDash,
 });
 
