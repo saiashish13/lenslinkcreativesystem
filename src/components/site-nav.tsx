@@ -13,6 +13,8 @@ export function SiteNav() {
     ? "/pro"
     : roles.includes("editor")
     ? "/editor"
+    : roles.length === 0
+    ? "/onboarding"
     : "/app";
 
   return (
