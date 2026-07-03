@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SignupRouteImport } from './routes/signup'
+import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as PlatformRouteImport } from './routes/platform'
 import { Route as MarketplaceRouteImport } from './routes/marketplace'
 import { Route as LoginRouteImport } from './routes/login'
@@ -36,6 +37,11 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
   path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PricingRoute = PricingRouteImport.update({
+  id: '/pricing',
+  path: '/pricing',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PlatformRoute = PlatformRouteImport.update({
@@ -127,6 +133,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/marketplace': typeof MarketplaceRoute
   '/platform': typeof PlatformRoute
+  '/pricing': typeof PricingRoute
   '/signup': typeof SignupRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin': typeof AuthenticatedAdminRoute
@@ -146,6 +153,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/marketplace': typeof MarketplaceRoute
   '/platform': typeof PlatformRoute
+  '/pricing': typeof PricingRoute
   '/signup': typeof SignupRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin': typeof AuthenticatedAdminRoute
@@ -167,6 +175,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/marketplace': typeof MarketplaceRoute
   '/platform': typeof PlatformRoute
+  '/pricing': typeof PricingRoute
   '/signup': typeof SignupRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
@@ -188,6 +197,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/marketplace'
     | '/platform'
+    | '/pricing'
     | '/signup'
     | '/sitemap.xml'
     | '/admin'
@@ -207,6 +217,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/marketplace'
     | '/platform'
+    | '/pricing'
     | '/signup'
     | '/sitemap.xml'
     | '/admin'
@@ -227,6 +238,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/marketplace'
     | '/platform'
+    | '/pricing'
     | '/signup'
     | '/sitemap.xml'
     | '/_authenticated/admin'
@@ -248,6 +260,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   MarketplaceRoute: typeof MarketplaceRoute
   PlatformRoute: typeof PlatformRoute
+  PricingRoute: typeof PricingRoute
   SignupRoute: typeof SignupRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   CreatorsHandleRoute: typeof CreatorsHandleRoute
@@ -269,6 +282,13 @@ declare module '@tanstack/react-router' {
       path: '/signup'
       fullPath: '/signup'
       preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pricing': {
+      id: '/pricing'
+      path: '/pricing'
+      fullPath: '/pricing'
+      preLoaderRoute: typeof PricingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/platform': {
@@ -418,6 +438,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   MarketplaceRoute: MarketplaceRoute,
   PlatformRoute: PlatformRoute,
+  PricingRoute: PricingRoute,
   SignupRoute: SignupRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   CreatorsHandleRoute: CreatorsHandleRoute,
