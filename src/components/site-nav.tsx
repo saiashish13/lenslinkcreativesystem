@@ -7,14 +7,6 @@ export function SiteNav() {
   const { user, roles, signOut } = useAuth();
   const router = useRouter();
 
-  const dashHref = roles.includes("admin")
-    ? "/admin"
-    : roles.includes("photographer")
-    ? "/pro"
-    : roles.includes("editor")
-    ? "/editor"
-    : "/app";
-
   const roleLinks: { to: "/pro" | "/editor" | "/admin"; label: string }[] = [];
   if (roles.includes("photographer")) roleLinks.push({ to: "/pro", label: "Creator Studio" });
   if (roles.includes("editor")) roleLinks.push({ to: "/editor", label: "Editor Studio" });
@@ -36,16 +28,16 @@ export function SiteNav() {
               {l.label}
             </Link>
           ))}
-          <Link to="/" hash="features" className="hover:text-foreground transition">Platform</Link>
-          <Link to="/" hash="pricing" className="hover:text-foreground transition">Pricing</Link>
-          <Link to="/" hash="faq" className="hover:text-foreground transition">FAQ</Link>
+          <Link to="/platform" activeProps={{ className: "text-foreground" }} className="hover:text-foreground transition">Platform</Link>
+          <Link to="/pricing" activeProps={{ className: "text-foreground" }} className="hover:text-foreground transition">Pricing</Link>
+          <Link to="/faq" activeProps={{ className: "text-foreground" }} className="hover:text-foreground transition">FAQ</Link>
         </nav>
         <div className="flex items-center gap-2">
           {user ? (
             <>
               <NotificationBell />
               <Link
-                to={dashHref}
+                to="/platform"
                 className="hidden sm:inline-flex items-center rounded-md border border-border px-3 py-2 text-sm text-foreground hover:bg-card transition"
               >
                 Dashboard
