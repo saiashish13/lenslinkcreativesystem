@@ -15,6 +15,11 @@ export function SiteNav() {
     ? "/editor"
     : "/app";
 
+  const roleLinks: { to: "/pro" | "/editor" | "/admin"; label: string }[] = [];
+  if (roles.includes("photographer")) roleLinks.push({ to: "/pro", label: "Creator Studio" });
+  if (roles.includes("editor")) roleLinks.push({ to: "/editor", label: "Editor Studio" });
+  if (roles.includes("admin")) roleLinks.push({ to: "/admin", label: "Admin" });
+
   return (
     <header className="fixed top-0 inset-x-0 z-50 backdrop-blur-xl bg-background/60 border-b border-border/50">
       <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
@@ -26,6 +31,11 @@ export function SiteNav() {
         </Link>
         <nav className="hidden md:flex items-center gap-8 text-sm text-muted-foreground">
           <Link to="/marketplace" activeProps={{ className: "text-foreground" }} className="hover:text-foreground transition">Discover</Link>
+          {roleLinks.map((l) => (
+            <Link key={l.to} to={l.to} activeProps={{ className: "text-foreground" }} className="hover:text-foreground transition">
+              {l.label}
+            </Link>
+          ))}
           <Link to="/" hash="features" className="hover:text-foreground transition">Platform</Link>
           <Link to="/" hash="pricing" className="hover:text-foreground transition">Pricing</Link>
           <Link to="/" hash="faq" className="hover:text-foreground transition">FAQ</Link>
@@ -34,7 +44,12 @@ export function SiteNav() {
           {user ? (
             <>
               <NotificationBell />
-              <Link to={dashHref} className="hidden sm:inline text-sm text-muted-foreground hover:text-foreground px-3 py-2">Dashboard</Link>
+              <Link
+                to={dashHref}
+                className="hidden sm:inline-flex items-center rounded-md border border-border px-3 py-2 text-sm text-foreground hover:bg-card transition"
+              >
+                Dashboard
+              </Link>
               <button
                 onClick={async () => { await signOut(); router.navigate({ to: "/" }); }}
                 className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-2 text-sm hover:bg-card transition"
