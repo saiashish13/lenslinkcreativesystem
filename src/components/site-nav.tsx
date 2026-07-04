@@ -7,15 +7,7 @@ export function SiteNav() {
   const { user, roles, signOut } = useAuth();
   const router = useRouter();
 
-  const dashHref = roles.includes("admin")
-    ? "/admin"
-    : roles.includes("photographer")
-    ? "/pro"
-    : roles.includes("editor")
-    ? "/editor"
-    : roles.length === 0
-    ? "/onboarding"
-    : "/app";
+  const dashHref = "/";
 
   return (
     <header className="fixed top-0 inset-x-0 z-50 backdrop-blur-xl bg-background/60 border-b border-border/50">
