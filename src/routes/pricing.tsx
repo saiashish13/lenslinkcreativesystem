@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Check, ArrowUpRight, Sparkles } from "lucide-react";
 import { SiteNav } from "@/components/site-nav";
@@ -15,10 +16,26 @@ export const Route = createFileRoute("/pricing")({
   }),
 });
 
-const CUSTOMER_TIERS = [
+type PricingTier = {
+  name: string;
+  monthlyPrice: string;
+  annualPrice: string;
+  annualPeriod: string;
+  period: string;
+  desc: string;
+  features: string[];
+  cta: string;
+  href: string;
+  featured: boolean;
+  annualDiscountLabel?: string;
+};
+
+const CUSTOMER_TIERS: PricingTier[] = [
   {
     name: "Free",
-    price: "₹0",
+    monthlyPrice: "₹0",
+    annualPrice: "₹0",
+    annualPeriod: "forever",
     period: "forever",
     desc: "Browse, message & book creators at no cost.",
     features: [
@@ -34,7 +51,9 @@ const CUSTOMER_TIERS = [
   },
   {
     name: "Pro",
-    price: "₹999",
+    monthlyPrice: "₹999",
+    annualPrice: "₹9,990",
+    annualPeriod: "/year",
     period: "/month",
     desc: "Priority access, dedicated support & AI-assisted briefs.",
     features: [
@@ -48,10 +67,13 @@ const CUSTOMER_TIERS = [
     cta: "Start Pro trial",
     href: "/signup",
     featured: true,
+    annualDiscountLabel: "Save ₹1,998",
   },
   {
     name: "Enterprise",
-    price: "Custom",
+    monthlyPrice: "Custom",
+    annualPrice: "Custom",
+    annualPeriod: "",
     period: "",
     desc: "Bulk bookings, white-label & API access for teams.",
     features: [
@@ -68,10 +90,12 @@ const CUSTOMER_TIERS = [
   },
 ];
 
-const CREATOR_TIERS = [
+const CREATOR_TIERS: PricingTier[] = [
   {
     name: "Starter",
-    price: "₹0",
+    monthlyPrice: "₹0",
+    annualPrice: "₹0",
+    annualPeriod: "forever",
     period: "forever",
     desc: "List your business and start getting discovered.",
     features: [
@@ -86,7 +110,9 @@ const CREATOR_TIERS = [
   },
   {
     name: "Pro",
-    price: "₹499",
+    monthlyPrice: "₹499",
+    annualPrice: "₹4,990",
+    annualPeriod: "/year",
     period: "/month",
     desc: "Rank higher, get verified & unlock premium leads.",
     features: [
@@ -100,21 +126,51 @@ const CREATOR_TIERS = [
     cta: "Go Pro",
     href: "/signup",
     featured: true,
+    annualDiscountLabel: "Save ₹998",
   },
 ];
 
 function PricingPage() {
+  const [annual, setAnnual] = useState(false);
+
   return (
     <main className="min-h-screen">
       <SiteNav />
       <section className="pt-32 pb-20">
         <div className="max-w-6xl mx-auto px-6">
-          <div className="text-center max-w-2xl mx-auto mb-16">
+          <div className="text-center max-w-2xl mx-auto mb-12">
             <p className="text-xs uppercase tracking-[0.2em] text-primary mb-3">Pricing</p>
             <h1 className="font-display text-5xl tracking-tight">Simple, transparent pricing.</h1>
             <p className="mt-4 text-muted-foreground">
               No hidden fees. Pay only when it makes sense for your workflow.
             </p>
+          </div>
+
+          <div className="flex justify-center mb-16">
+            <div className="inline-flex items-center gap-3 rounded-full border border-border bg-card/60 px-1.5 py-1.5">
+              <button
+                type="button"
+                onClick={() => setAnnual(false)}
+                className={`rounded-full px-5 py-1.5 text-sm font-medium transition ${
+                  !annual
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                Monthly
+              </button>
+              <button
+                type="button"
+                onClick={() => setAnnual(true)}
+                className={`rounded-full px-5 py-1.5 text-sm font-medium transition ${
+                  annual
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                Annual
+              </button>
+            </div>
           </div>
 
           <div className="mb-20">
@@ -123,7 +179,7 @@ function PricingPage() {
             </h2>
             <div className="grid md:grid-cols-3 gap-4">
               {CUSTOMER_TIERS.map((tier) => (
-                <PricingCard key={tier.name} tier={tier} />
+                <PricingCard key={tier.name} tier={tier} annual={annual} />
               ))}
             </div>
           </div>
@@ -134,7 +190,7 @@ function PricingPage() {
             </h2>
             <div className="grid md:grid-cols-2 gap-4 max-w-3xl">
               {CREATOR_TIERS.map((tier) => (
-                <PricingCard key={tier.name} tier={tier} />
+                <PricingCard key={tier.name} tier={tier} annual={annual} />
               ))}
             </div>
           </div>
@@ -145,7 +201,11 @@ function PricingPage() {
   );
 }
 
-function PricingCard({ tier }: { tier: (typeof CUSTOMER_TIERS)[number] | (typeof CREATOR_TIERS)[number] }) {
+function PricingCard({ tier, annual }: { tier: PricingTier; annual: boolean }) {
+  const price = annual ? tier.annualPrice : tier.monthlyPrice;
+  const period = annual ? tier.annualPeriod : tier.period;
+  const showDiscount = annual && tier.annualDiscountLabel;
+
   return (
     <div
       className={`rounded-2xl border p-6 transition ${
@@ -161,9 +221,14 @@ function PricingCard({ tier }: { tier: (typeof CUSTOMER_TIERS)[number] | (typeof
       )}
       <div className="font-display text-xl">{tier.name}</div>
       <div className="mt-2 flex items-baseline gap-1">
-        <span className="font-display text-4xl tracking-tight">{tier.price}</span>
-        <span className="text-sm text-muted-foreground">{tier.period}</span>
+        <span className="font-display text-4xl tracking-tight">{price}</span>
+        <span className="text-sm text-muted-foreground">{period}</span>
       </div>
+      {showDiscount && (
+        <span className="mt-1 inline-block rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 text-xs text-emerald-400 font-medium">
+          {tier.annualDiscountLabel}
+        </span>
+      )}
       <p className="mt-3 text-sm text-muted-foreground">{tier.desc}</p>
       <ul className="mt-6 space-y-2.5">
         {tier.features.map((f) => (
