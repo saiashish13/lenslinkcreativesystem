@@ -21,8 +21,8 @@ export function SiteNav() {
         <nav className="hidden md:flex items-center gap-8 text-sm text-muted-foreground">
           <Link to="/marketplace" activeProps={{ className: "text-foreground" }} className="hover:text-foreground transition">Discover</Link>
           <Link to="/" hash="features" className="hover:text-foreground transition">Platform</Link>
-          <Link to="/" hash="pricing" className="hover:text-foreground transition">Pricing</Link>
-          <Link to="/" hash="faq" className="hover:text-foreground transition">FAQ</Link>
+          <Link to="/pricing" activeProps={{ className: "text-foreground" }} className="hover:text-foreground transition">Pricing</Link>
+          <Link to="/faq" activeProps={{ className: "text-foreground" }} className="hover:text-foreground transition">FAQ</Link>
         </nav>
         <div className="flex items-center gap-2">
           {user ? (
