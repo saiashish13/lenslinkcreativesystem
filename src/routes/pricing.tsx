@@ -3,6 +3,9 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Check, ArrowUpRight, Sparkles } from "lucide-react";
 import { SiteNav } from "@/components/site-nav";
 import { SiteFooter } from "@/components/site-footer";
+import { useServerFn } from "@tanstack/react-start";
+import { createCheckoutSession } from "@/lib/checkout.functions";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/pricing")({
   component: PricingPage,
@@ -28,6 +31,7 @@ type PricingTier = {
   href: string;
   featured: boolean;
   annualDiscountLabel?: string;
+  planSlug?: "customer-pro" | "creator-pro";
 };
 
 const CUSTOMER_TIERS: PricingTier[] = [
@@ -68,6 +72,7 @@ const CUSTOMER_TIERS: PricingTier[] = [
     href: "/signup",
     featured: true,
     annualDiscountLabel: "Save ₹1,998",
+    planSlug: "customer-pro",
   },
   {
     name: "Enterprise",
@@ -127,6 +132,7 @@ const CREATOR_TIERS: PricingTier[] = [
     href: "/signup",
     featured: true,
     annualDiscountLabel: "Save ₹998",
+    planSlug: "creator-pro",
   },
 ];
 
@@ -205,6 +211,30 @@ function PricingCard({ tier, annual }: { tier: PricingTier; annual: boolean }) {
   const price = annual ? tier.annualPrice : tier.monthlyPrice;
   const period = annual ? tier.annualPeriod : tier.period;
   const showDiscount = annual && tier.annualDiscountLabel;
+  const checkout = useServerFn(createCheckoutSession);
+  const [loading, setLoading] = useState(false);
+
+  const handleCheckout = async () => {
+    if (!tier.planSlug) return;
+    setLoading(true);
+    try {
+      const { url } = await checkout({
+        data: { plan: tier.planSlug, billingPeriod: annual ? "annual" : "monthly" },
+      });
+      if (url) window.location.href = url;
+      else throw new Error("No checkout URL returned");
+    } catch (err) {
+      console.error(err);
+      toast.error("Could not start checkout. Please try again.");
+      setLoading(false);
+    }
+  };
+
+  const btnClass = `inline-flex w-full items-center justify-center gap-1.5 rounded-md px-5 py-2.5 text-sm font-medium transition ${
+    tier.featured
+      ? "bg-[image:var(--gradient-gold)] text-primary-foreground shadow-[var(--shadow-gold)] hover:opacity-90"
+      : "border border-border hover:bg-card"
+  }`;
 
   return (
     <div
@@ -239,25 +269,26 @@ function PricingCard({ tier, annual }: { tier: PricingTier; annual: boolean }) {
         ))}
       </ul>
       <div className="mt-8">
-        {tier.href.startsWith("mailto") ? (
+        {tier.planSlug ? (
+          <button
+            type="button"
+            onClick={handleCheckout}
+            disabled={loading}
+            className={`${btnClass} disabled:opacity-60`}
+          >
+            {loading ? "Redirecting…" : tier.cta} <ArrowUpRight className="h-4 w-4" />
+          </button>
+        ) : tier.href.startsWith("mailto") ? (
           <a
             href={tier.href}
-            className={`inline-flex w-full items-center justify-center gap-1.5 rounded-md px-5 py-2.5 text-sm font-medium transition ${
-              tier.featured
-                ? "bg-[image:var(--gradient-gold)] text-primary-foreground shadow-[var(--shadow-gold)] hover:opacity-90"
-                : "border border-border hover:bg-card"
-            }`}
+            className={btnClass}
           >
             {tier.cta} <ArrowUpRight className="h-4 w-4" />
           </a>
         ) : (
           <Link
             to={tier.href}
-            className={`inline-flex w-full items-center justify-center gap-1.5 rounded-md px-5 py-2.5 text-sm font-medium transition ${
-              tier.featured
-                ? "bg-[image:var(--gradient-gold)] text-primary-foreground shadow-[var(--shadow-gold)] hover:opacity-90"
-                : "border border-border hover:bg-card"
-            }`}
+            className={btnClass}
           >
             {tier.cta} <ArrowUpRight className="h-4 w-4" />
           </Link>
