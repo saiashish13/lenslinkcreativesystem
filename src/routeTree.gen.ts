@@ -18,6 +18,7 @@ import { Route as FaqRouteImport } from './routes/faq'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CreatorsHandleRouteImport } from './routes/creators.$handle'
+import { Route as CheckoutSuccessRouteImport } from './routes/checkout.success'
 import { Route as AuthenticatedProRouteImport } from './routes/_authenticated/pro'
 import { Route as AuthenticatedOnboardingListingRouteImport } from './routes/_authenticated/onboarding-listing'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
@@ -71,6 +72,11 @@ const IndexRoute = IndexRouteImport.update({
 const CreatorsHandleRoute = CreatorsHandleRouteImport.update({
   id: '/creators/$handle',
   path: '/creators/$handle',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CheckoutSuccessRoute = CheckoutSuccessRouteImport.update({
+  id: '/checkout/success',
+  path: '/checkout/success',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedProRoute = AuthenticatedProRouteImport.update({
@@ -143,6 +149,7 @@ export interface FileRoutesByFullPath {
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/onboarding-listing': typeof AuthenticatedOnboardingListingRoute
   '/pro': typeof AuthenticatedProRoute
+  '/checkout/success': typeof CheckoutSuccessRoute
   '/creators/$handle': typeof CreatorsHandleRoute
   '/claim/$listingId': typeof AuthenticatedClaimListingIdRoute
   '/discover/$category/$city': typeof DiscoverCategoryCityRoute
@@ -163,6 +170,7 @@ export interface FileRoutesByTo {
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/onboarding-listing': typeof AuthenticatedOnboardingListingRoute
   '/pro': typeof AuthenticatedProRoute
+  '/checkout/success': typeof CheckoutSuccessRoute
   '/creators/$handle': typeof CreatorsHandleRoute
   '/claim/$listingId': typeof AuthenticatedClaimListingIdRoute
   '/discover/$category/$city': typeof DiscoverCategoryCityRoute
@@ -185,6 +193,7 @@ export interface FileRoutesById {
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/onboarding-listing': typeof AuthenticatedOnboardingListingRoute
   '/_authenticated/pro': typeof AuthenticatedProRoute
+  '/checkout/success': typeof CheckoutSuccessRoute
   '/creators/$handle': typeof CreatorsHandleRoute
   '/_authenticated/claim/$listingId': typeof AuthenticatedClaimListingIdRoute
   '/discover/$category/$city': typeof DiscoverCategoryCityRoute
@@ -207,6 +216,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/onboarding-listing'
     | '/pro'
+    | '/checkout/success'
     | '/creators/$handle'
     | '/claim/$listingId'
     | '/discover/$category/$city'
@@ -227,6 +237,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/onboarding-listing'
     | '/pro'
+    | '/checkout/success'
     | '/creators/$handle'
     | '/claim/$listingId'
     | '/discover/$category/$city'
@@ -248,6 +259,7 @@ export interface FileRouteTypes {
     | '/_authenticated/onboarding'
     | '/_authenticated/onboarding-listing'
     | '/_authenticated/pro'
+    | '/checkout/success'
     | '/creators/$handle'
     | '/_authenticated/claim/$listingId'
     | '/discover/$category/$city'
@@ -263,6 +275,7 @@ export interface RootRouteChildren {
   PricingRoute: typeof PricingRoute
   SignupRoute: typeof SignupRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  CheckoutSuccessRoute: typeof CheckoutSuccessRoute
   CreatorsHandleRoute: typeof CreatorsHandleRoute
   DiscoverCategoryCityRoute: typeof DiscoverCategoryCityRoute
   ApiPublicCronRefreshPlacesRoute: typeof ApiPublicCronRefreshPlacesRoute
@@ -331,6 +344,13 @@ declare module '@tanstack/react-router' {
       path: '/creators/$handle'
       fullPath: '/creators/$handle'
       preLoaderRoute: typeof CreatorsHandleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/checkout/success': {
+      id: '/checkout/success'
+      path: '/checkout/success'
+      fullPath: '/checkout/success'
+      preLoaderRoute: typeof CheckoutSuccessRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/pro': {
@@ -441,6 +461,7 @@ const rootRouteChildren: RootRouteChildren = {
   PricingRoute: PricingRoute,
   SignupRoute: SignupRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  CheckoutSuccessRoute: CheckoutSuccessRoute,
   CreatorsHandleRoute: CreatorsHandleRoute,
   DiscoverCategoryCityRoute: DiscoverCategoryCityRoute,
   ApiPublicCronRefreshPlacesRoute: ApiPublicCronRefreshPlacesRoute,
