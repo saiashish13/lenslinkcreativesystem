@@ -352,6 +352,53 @@ export const searchAndImportPlaces = createServerFn({ method: "POST" })
     }
     await supabaseAdmin.from("places_search_log").insert({ user_id: userId, query: data.query });
 
+    const { data: job } = await supabaseAdmin
+      .from("import_jobs")
+      .insert({
+        provider: "google_places",
+        job_type: "single",
+        status: "running",
+        triggered_by: userId,
+        input: data,
+      })
+      .select("id")
+      .single();
+    const finish = async (status: string, extra: Record<string, unknown>) => {
+      if (!job?.id) return;
+      await supabaseAdmin
+        .from("import_jobs")
+        .update({ status, finished_at: new Date().toISOString(), ...extra })
+        .eq("id", job.id);
+    };
+    try {
+      const r = await runPlacesImport(data);
+      await finish("success", {
+        total_imported: r.count,
+        results: [{ city: data.city ?? "any", category: data.category ?? "any", imported: r.count }],
+      });
+      return r;
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Import failed";
+      await finish("failed", { error: msg });
+      throw err;
+    }
+  });
+
+// Legacy inline body kept below (dead) — replaced by runPlacesImport call above.
+const _legacySearchAndImportPlaces = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i) => SearchInput.parse(i))
+  .handler(async ({ data, context }) => {
+    const { userId, supabase } = context;
+
+    const { data: roleRow } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId)
+      .eq("role", "admin")
+      .maybeSingle();
+    if (!roleRow) throw new Error("Admin role required");
+
     const apiKey = process.env.LOVABLE_API_KEY;
     const connKey = process.env.GOOGLE_MAPS_API_KEY;
     const browserKey = process.env.GOOGLE_MAPS_BROWSER_KEY;
