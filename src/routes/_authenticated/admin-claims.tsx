@@ -173,6 +173,29 @@ function AdminClaims() {
 
         <section>
           <div className="text-xs uppercase tracking-wider text-muted-foreground mb-4">Pending claims ({claims.length})</div>
+          {/* placeholder, replaced below */}
+        </section>
+
+        <JobHistorySection jobs={jobs} onRefresh={() => listJobs().then((r) => setJobs(r.jobs as Job[]))} />
+
+        <ProviderConnectorsSection
+          connectors={connectors}
+          onSave={async (slug, patch) => {
+            await saveProvider({ data: { slug, ...patch } });
+            const r = await listProviders();
+            setConnectors(r.connectors as Connector[]);
+          }}
+          onRun={async (slug, opts) => {
+            const r = await runProvider({ data: { slug, ...opts } });
+            toast[r.error ? "warning" : "success"](`Imported ${r.imported}${r.error ? " · " + r.error : ""}`);
+            const rc = await listProviders();
+            setConnectors(rc.connectors as Connector[]);
+            listJobs().then((jr) => setJobs(jr.jobs as Job[]));
+          }}
+        />
+
+        <section>
+          <div className="text-xs uppercase tracking-wider text-muted-foreground mb-4">Pending claims ({claims.length})</div>
           {loading ? (
             <div className="grid place-items-center py-10"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
           ) : claims.length === 0 ? (
