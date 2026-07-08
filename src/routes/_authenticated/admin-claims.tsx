@@ -2,10 +2,12 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Loader2, Check, X, ExternalLink, Search } from "lucide-react";
+import { Loader2, Check, X, ExternalLink, Search, History, Plug, Play, Save } from "lucide-react";
 import { DashShell } from "@/components/dash-shell";
 import { pendingClaims, reviewClaim } from "@/lib/claims.functions";
 import { searchAndImportPlaces, bulkImportPlaces } from "@/lib/places.functions";
+import { listImportJobs } from "@/lib/imports.functions";
+import { listProviderConnectors, upsertProviderConnector, runProviderImport } from "@/lib/providers.functions";
 import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/_authenticated/admin-claims")({
@@ -14,6 +16,8 @@ export const Route = createFileRoute("/_authenticated/admin-claims")({
 });
 
 type Claim = Awaited<ReturnType<typeof pendingClaims>>["claims"][number];
+type Job = Awaited<ReturnType<typeof listImportJobs>>["jobs"][number];
+type Connector = Awaited<ReturnType<typeof listProviderConnectors>>["connectors"][number];
 
 function AdminClaims() {
   const { roles } = useAuth();
@@ -22,14 +26,24 @@ function AdminClaims() {
   const review = useServerFn(reviewClaim);
   const importPlaces = useServerFn(searchAndImportPlaces);
   const bulkImport = useServerFn(bulkImportPlaces);
+  const listJobs = useServerFn(listImportJobs);
+  const listProviders = useServerFn(listProviderConnectors);
+  const saveProvider = useServerFn(upsertProviderConnector);
+  const runProvider = useServerFn(runProviderImport);
 
   const [claims, setClaims] = useState<Claim[]>([]);
   const [loading, setLoading] = useState(true);
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [connectors, setConnectors] = useState<Connector[]>([]);
 
   const refresh = useCallback(() => {
     setLoading(true);
-    list().then((r) => setClaims(r.claims as Claim[])).finally(() => setLoading(false));
-  }, [list]);
+    Promise.all([
+      list().then((r) => setClaims(r.claims as Claim[])),
+      listJobs().then((r) => setJobs(r.jobs as Job[])),
+      listProviders().then((r) => setConnectors(r.connectors as Connector[])),
+    ]).finally(() => setLoading(false));
+  }, [list, listJobs, listProviders]);
 
   useEffect(() => { if (isAdmin) refresh(); else setLoading(false); }, [isAdmin, refresh]);
 
