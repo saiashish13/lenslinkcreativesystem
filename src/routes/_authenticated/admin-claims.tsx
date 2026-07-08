@@ -107,8 +107,6 @@ function AdminClaims() {
     }
   };
 
-  const runSingle = runImport; // re-alias to reload jobs after single import
-  void runSingle;
   const wrappedRunImport = async (e: React.FormEvent) => {
     await runImport(e);
     listJobs().then((res) => setJobs(res.jobs as Job[]));
@@ -123,7 +121,7 @@ function AdminClaims() {
       <div className="grid gap-8">
         <section className="rounded-2xl border border-border bg-card/60 p-6">
           <div className="text-xs uppercase tracking-wider text-muted-foreground mb-4">Import from Google Places</div>
-          <form onSubmit={runImport} className="grid sm:grid-cols-[1fr_1fr_auto_auto] gap-2">
+          <form onSubmit={wrappedRunImport} className="grid sm:grid-cols-[1fr_1fr_auto_auto] gap-2">
             <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search query (e.g. wedding photographers)" className="rounded-md border border-border bg-background px-3 py-2 text-sm" required minLength={2} />
             <input value={city} onChange={(e) => setCity(e.target.value)} placeholder="City (optional)" className="rounded-md border border-border bg-background px-3 py-2 text-sm" />
             <select value={cat} onChange={(e) => setCat(e.target.value as typeof cat)} className="rounded-md border border-border bg-background px-3 py-2 text-sm">
