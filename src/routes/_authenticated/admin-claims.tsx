@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { Loader2, Check, X, ExternalLink, Search } from "lucide-react";
 import { DashShell } from "@/components/dash-shell";
 import { pendingClaims, reviewClaim } from "@/lib/claims.functions";
-import { searchAndImportPlaces } from "@/lib/places.functions";
+import { searchAndImportPlaces, bulkImportPlaces } from "@/lib/places.functions";
 import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/_authenticated/admin-claims")({
@@ -21,6 +21,7 @@ function AdminClaims() {
   const list = useServerFn(pendingClaims);
   const review = useServerFn(reviewClaim);
   const importPlaces = useServerFn(searchAndImportPlaces);
+  const bulkImport = useServerFn(bulkImportPlaces);
 
   const [claims, setClaims] = useState<Claim[]>([]);
   const [loading, setLoading] = useState(true);
@@ -60,6 +61,37 @@ function AdminClaims() {
     }
   };
 
+  const [bulkQuery, setBulkQuery] = useState("wedding");
+  const [bulkCities, setBulkCities] = useState("Mumbai, Delhi, Bangalore, Hyderabad, Chennai, Pune, Kolkata, Ahmedabad, Jaipur, Goa");
+  const [bulkCats, setBulkCats] = useState<Record<"photographer" | "videographer" | "editor", boolean>>({
+    photographer: true,
+    videographer: true,
+    editor: false,
+  });
+  const [bulkRunning, setBulkRunning] = useState(false);
+  const [bulkResults, setBulkResults] = useState<{ totalImported: number; results: Array<{ city: string; category: string; imported: number; skipped?: string }> } | null>(null);
+
+  const runBulk = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const cities = bulkCities.split(",").map((s) => s.trim()).filter(Boolean);
+    const categories = (Object.keys(bulkCats) as Array<keyof typeof bulkCats>).filter((k) => bulkCats[k]);
+    if (!cities.length || !categories.length) {
+      toast.error("Pick at least one city and one category");
+      return;
+    }
+    setBulkRunning(true);
+    setBulkResults(null);
+    try {
+      const r = await bulkImport({ data: { query: bulkQuery, cities, categories } });
+      setBulkResults(r);
+      toast.success(`Imported ${r.totalImported} listings across ${r.results.length} combos`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Bulk import failed");
+    } finally {
+      setBulkRunning(false);
+    }
+  };
+
   if (!isAdmin) {
     return <DashShell title="Admin only"><p className="text-muted-foreground">You need the admin role to view this page.</p></DashShell>;
   }
@@ -82,6 +114,41 @@ function AdminClaims() {
             </button>
           </form>
           <p className="text-xs text-muted-foreground mt-3">Rate-limited to 30 imports/hour. Results are deduped by Google place ID.</p>
+        </section>
+
+        <section className="rounded-2xl border border-border bg-card/60 p-6">
+          <div className="text-xs uppercase tracking-wider text-muted-foreground mb-4">Bulk import — many cities × categories</div>
+          <form onSubmit={runBulk} className="grid gap-3">
+            <div className="grid sm:grid-cols-[200px_1fr] gap-2">
+              <input value={bulkQuery} onChange={(e) => setBulkQuery(e.target.value)} placeholder="Base query (e.g. wedding)" className="rounded-md border border-border bg-background px-3 py-2 text-sm" />
+              <input value={bulkCities} onChange={(e) => setBulkCities(e.target.value)} placeholder="Cities, comma-separated" className="rounded-md border border-border bg-background px-3 py-2 text-sm" />
+            </div>
+            <div className="flex flex-wrap items-center gap-4 text-sm">
+              {(["photographer", "videographer", "editor"] as const).map((c) => (
+                <label key={c} className="inline-flex items-center gap-2">
+                  <input type="checkbox" checked={bulkCats[c]} onChange={(e) => setBulkCats((s) => ({ ...s, [c]: e.target.checked }))} />
+                  {c}
+                </label>
+              ))}
+              <button type="submit" disabled={bulkRunning} className="ml-auto rounded-md bg-[image:var(--gradient-gold)] text-primary-foreground px-4 py-2 text-sm inline-flex items-center gap-1.5 disabled:opacity-50">
+                {bulkRunning ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />} Run bulk import
+              </button>
+            </div>
+          </form>
+          <p className="text-xs text-muted-foreground mt-3">Runs one Google Places query per city × category. Each counts against the 30/hour limit; extra combos are skipped and reported.</p>
+          {bulkResults && (
+            <div className="mt-4 rounded-lg border border-border bg-background/60 p-3 max-h-64 overflow-auto text-xs">
+              <div className="mb-2 font-medium">Total imported: {bulkResults.totalImported}</div>
+              <table className="w-full">
+                <thead className="text-muted-foreground"><tr><th className="text-left font-normal py-1">City</th><th className="text-left font-normal py-1">Category</th><th className="text-right font-normal py-1">Imported</th><th className="text-left font-normal py-1 pl-3">Note</th></tr></thead>
+                <tbody>
+                  {bulkResults.results.map((r, i) => (
+                    <tr key={i} className="border-t border-border/60"><td className="py-1">{r.city}</td><td className="py-1">{r.category}</td><td className="py-1 text-right">{r.imported}</td><td className="py-1 pl-3 text-muted-foreground">{r.skipped ?? "ok"}</td></tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </section>
 
         <section>
