@@ -280,6 +280,18 @@ export const bulkImportPlaces = createServerFn({ method: "POST" })
       .maybeSingle();
     if (!roleRow) throw new Error("Admin role required");
 
+    const { data: job } = await supabaseAdmin
+      .from("import_jobs")
+      .insert({
+        provider: "google_places",
+        job_type: "bulk",
+        status: "running",
+        triggered_by: userId,
+        input: data,
+      })
+      .select("id")
+      .single();
+
     const results: Array<{ city: string; category: string; imported: number; skipped?: string }> = [];
     let totalImported = 0;
 
@@ -301,6 +313,16 @@ export const bulkImportPlaces = createServerFn({ method: "POST" })
           results.push({ city, category, imported: 0, skipped: err instanceof Error ? err.message : "error" });
         }
       }
+    }
+
+    const anyRun = results.some((r) => !r.skipped);
+    const anySkipped = results.some((r) => r.skipped);
+    const status = !anyRun ? "failed" : anySkipped ? "partial" : "success";
+    if (job?.id) {
+      await supabaseAdmin
+        .from("import_jobs")
+        .update({ status, results, total_imported: totalImported, finished_at: new Date().toISOString() })
+        .eq("id", job.id);
     }
 
     return { totalImported, results };
