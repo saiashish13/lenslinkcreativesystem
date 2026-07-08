@@ -64,7 +64,13 @@ export const upsertProviderConnector = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const patch: Record<string, unknown> = {};
+    const patch: {
+      enabled?: boolean;
+      notes?: string;
+      config?: Record<string, unknown>;
+      credentials?: Record<string, string>;
+      status?: string;
+    } = {};
     if (data.enabled !== undefined) patch.enabled = data.enabled;
     if (data.notes !== undefined) patch.notes = data.notes;
     if (data.config !== undefined) patch.config = data.config;
@@ -74,7 +80,8 @@ export const upsertProviderConnector = createServerFn({ method: "POST" })
     }
     const { error } = await supabaseAdmin
       .from("provider_connectors")
-      .update(patch)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .update(patch as any)
       .eq("slug", data.slug);
     if (error) throw new Error(error.message);
     return { ok: true };
