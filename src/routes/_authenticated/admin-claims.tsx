@@ -171,23 +171,19 @@ function AdminClaims() {
           )}
         </section>
 
-        <section>
-          <div className="text-xs uppercase tracking-wider text-muted-foreground mb-4">Pending claims ({claims.length})</div>
-          {/* placeholder, replaced below */}
-        </section>
-
         <JobHistorySection jobs={jobs} onRefresh={() => listJobs().then((r) => setJobs(r.jobs as Job[]))} />
 
         <ProviderConnectorsSection
           connectors={connectors}
-          onSave={async (slug, patch) => {
+          onSave={async (slug: string, patch: Partial<{ enabled: boolean; credentials: Record<string, string>; notes: string }>) => {
             await saveProvider({ data: { slug, ...patch } });
             const r = await listProviders();
             setConnectors(r.connectors as Connector[]);
           }}
-          onRun={async (slug, opts) => {
+          onRun={async (slug: string, opts: { query?: string; city?: string; category?: "photographer" | "videographer" | "editor" }) => {
             const r = await runProvider({ data: { slug, ...opts } });
-            toast[r.error ? "warning" : "success"](`Imported ${r.imported}${r.error ? " · " + r.error : ""}`);
+            if (r.error) toast.warning(`Imported ${r.imported} · ${r.error}`);
+            else toast.success(`Imported ${r.imported}`);
             const rc = await listProviders();
             setConnectors(rc.connectors as Connector[]);
             listJobs().then((jr) => setJobs(jr.jobs as Job[]));
