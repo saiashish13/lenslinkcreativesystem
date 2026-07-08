@@ -99,11 +99,19 @@ function AdminClaims() {
       const r = await bulkImport({ data: { query: bulkQuery, cities, categories } });
       setBulkResults(r);
       toast.success(`Imported ${r.totalImported} listings across ${r.results.length} combos`);
+      listJobs().then((res) => setJobs(res.jobs as Job[]));
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Bulk import failed");
     } finally {
       setBulkRunning(false);
     }
+  };
+
+  const runSingle = runImport; // re-alias to reload jobs after single import
+  void runSingle;
+  const wrappedRunImport = async (e: React.FormEvent) => {
+    await runImport(e);
+    listJobs().then((res) => setJobs(res.jobs as Job[]));
   };
 
   if (!isAdmin) {
