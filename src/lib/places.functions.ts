@@ -257,6 +257,56 @@ export const searchPlacesPublic = createServerFn({ method: "POST" })
   });
 
 /**
+ * Admin-only bulk importer: runs Places import across many city×category
+ * combos in a single call. Skips combos that would exceed the per-user
+ * hourly rate limit and reports what was done.
+ */
+const BulkInput = z.object({
+  query: z.string().min(2).max(120).optional().default("wedding"),
+  cities: z.array(z.string().min(2).max(80)).min(1).max(30),
+  categories: z.array(z.enum(["photographer", "videographer", "editor"])).min(1),
+});
+
+export const bulkImportPlaces = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i) => BulkInput.parse(i))
+  .handler(async ({ data, context }) => {
+    const { userId, supabase } = context;
+    const { data: roleRow } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId)
+      .eq("role", "admin")
+      .maybeSingle();
+    if (!roleRow) throw new Error("Admin role required");
+
+    const results: Array<{ city: string; category: string; imported: number; skipped?: string }> = [];
+    let totalImported = 0;
+
+    for (const city of data.cities) {
+      for (const category of data.categories) {
+        if (!(await checkRateLimit(userId))) {
+          results.push({ city, category, imported: 0, skipped: "rate_limit" });
+          continue;
+        }
+        await supabaseAdmin.from("places_search_log").insert({
+          user_id: userId,
+          query: `${data.query} ${category} ${city}`,
+        });
+        try {
+          const r = await runPlacesImport({ query: data.query, city, category });
+          results.push({ city, category, imported: r.count });
+          totalImported += r.count;
+        } catch (err) {
+          results.push({ city, category, imported: 0, skipped: err instanceof Error ? err.message : "error" });
+        }
+      }
+    }
+
+    return { totalImported, results };
+  });
+
+/**
  * Searches Google Places and upserts results into creator_listings.
  * Admin-only. Returns the imported listing slugs.
  */
