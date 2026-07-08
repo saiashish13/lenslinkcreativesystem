@@ -355,6 +355,48 @@ export type Database = {
           },
         ]
       }
+      import_jobs: {
+        Row: {
+          error: string | null
+          finished_at: string | null
+          id: string
+          input: Json
+          job_type: string
+          provider: string
+          results: Json
+          started_at: string
+          status: string
+          total_imported: number
+          triggered_by: string | null
+        }
+        Insert: {
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          input?: Json
+          job_type: string
+          provider?: string
+          results?: Json
+          started_at?: string
+          status?: string
+          total_imported?: number
+          triggered_by?: string | null
+        }
+        Update: {
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          input?: Json
+          job_type?: string
+          provider?: string
+          results?: Json
+          started_at?: string
+          status?: string
+          total_imported?: number
+          triggered_by?: string | null
+        }
+        Relationships: []
+      }
       listing_photos: {
         Row: {
           attribution_html: string | null
@@ -702,6 +744,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      provider_connectors: {
+        Row: {
+          config: Json
+          created_at: string
+          credentials: Json
+          enabled: boolean
+          id: string
+          last_error: string | null
+          last_tested_at: string | null
+          name: string
+          notes: string | null
+          slug: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          config?: Json
+          created_at?: string
+          credentials?: Json
+          enabled?: boolean
+          id?: string
+          last_error?: string | null
+          last_tested_at?: string | null
+          name: string
+          notes?: string | null
+          slug: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          config?: Json
+          created_at?: string
+          credentials?: Json
+          enabled?: boolean
+          id?: string
+          last_error?: string | null
+          last_tested_at?: string | null
+          name?: string
+          notes?: string | null
+          slug?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       reviews: {
         Row: {
