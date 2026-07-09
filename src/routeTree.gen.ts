@@ -27,6 +27,7 @@ import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/ap
 import { Route as AuthenticatedAdminClaimsRouteImport } from './routes/_authenticated/admin-claims'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as DiscoverCategoryCityRouteImport } from './routes/discover.$category.$city'
+import { Route as ApiPublicSeedPlacesRouteImport } from './routes/api/public/seed-places'
 import { Route as AuthenticatedClaimListingIdRouteImport } from './routes/_authenticated/claim.$listingId'
 import { Route as ApiPublicCronRefreshPlacesRouteImport } from './routes/api/public/cron/refresh-places'
 
@@ -121,6 +122,11 @@ const DiscoverCategoryCityRoute = DiscoverCategoryCityRouteImport.update({
   path: '/discover/$category/$city',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicSeedPlacesRoute = ApiPublicSeedPlacesRouteImport.update({
+  id: '/api/public/seed-places',
+  path: '/api/public/seed-places',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedClaimListingIdRoute =
   AuthenticatedClaimListingIdRouteImport.update({
     id: '/claim/$listingId',
@@ -152,6 +158,7 @@ export interface FileRoutesByFullPath {
   '/checkout/success': typeof CheckoutSuccessRoute
   '/creators/$handle': typeof CreatorsHandleRoute
   '/claim/$listingId': typeof AuthenticatedClaimListingIdRoute
+  '/api/public/seed-places': typeof ApiPublicSeedPlacesRoute
   '/discover/$category/$city': typeof DiscoverCategoryCityRoute
   '/api/public/cron/refresh-places': typeof ApiPublicCronRefreshPlacesRoute
 }
@@ -173,6 +180,7 @@ export interface FileRoutesByTo {
   '/checkout/success': typeof CheckoutSuccessRoute
   '/creators/$handle': typeof CreatorsHandleRoute
   '/claim/$listingId': typeof AuthenticatedClaimListingIdRoute
+  '/api/public/seed-places': typeof ApiPublicSeedPlacesRoute
   '/discover/$category/$city': typeof DiscoverCategoryCityRoute
   '/api/public/cron/refresh-places': typeof ApiPublicCronRefreshPlacesRoute
 }
@@ -196,6 +204,7 @@ export interface FileRoutesById {
   '/checkout/success': typeof CheckoutSuccessRoute
   '/creators/$handle': typeof CreatorsHandleRoute
   '/_authenticated/claim/$listingId': typeof AuthenticatedClaimListingIdRoute
+  '/api/public/seed-places': typeof ApiPublicSeedPlacesRoute
   '/discover/$category/$city': typeof DiscoverCategoryCityRoute
   '/api/public/cron/refresh-places': typeof ApiPublicCronRefreshPlacesRoute
 }
@@ -219,6 +228,7 @@ export interface FileRouteTypes {
     | '/checkout/success'
     | '/creators/$handle'
     | '/claim/$listingId'
+    | '/api/public/seed-places'
     | '/discover/$category/$city'
     | '/api/public/cron/refresh-places'
   fileRoutesByTo: FileRoutesByTo
@@ -240,6 +250,7 @@ export interface FileRouteTypes {
     | '/checkout/success'
     | '/creators/$handle'
     | '/claim/$listingId'
+    | '/api/public/seed-places'
     | '/discover/$category/$city'
     | '/api/public/cron/refresh-places'
   id:
@@ -262,6 +273,7 @@ export interface FileRouteTypes {
     | '/checkout/success'
     | '/creators/$handle'
     | '/_authenticated/claim/$listingId'
+    | '/api/public/seed-places'
     | '/discover/$category/$city'
     | '/api/public/cron/refresh-places'
   fileRoutesById: FileRoutesById
@@ -277,6 +289,7 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   CheckoutSuccessRoute: typeof CheckoutSuccessRoute
   CreatorsHandleRoute: typeof CreatorsHandleRoute
+  ApiPublicSeedPlacesRoute: typeof ApiPublicSeedPlacesRoute
   DiscoverCategoryCityRoute: typeof DiscoverCategoryCityRoute
   ApiPublicCronRefreshPlacesRoute: typeof ApiPublicCronRefreshPlacesRoute
 }
@@ -409,6 +422,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DiscoverCategoryCityRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/seed-places': {
+      id: '/api/public/seed-places'
+      path: '/api/public/seed-places'
+      fullPath: '/api/public/seed-places'
+      preLoaderRoute: typeof ApiPublicSeedPlacesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/claim/$listingId': {
       id: '/_authenticated/claim/$listingId'
       path: '/claim/$listingId'
@@ -463,9 +483,20 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   CheckoutSuccessRoute: CheckoutSuccessRoute,
   CreatorsHandleRoute: CreatorsHandleRoute,
+  ApiPublicSeedPlacesRoute: ApiPublicSeedPlacesRoute,
   DiscoverCategoryCityRoute: DiscoverCategoryCityRoute,
   ApiPublicCronRefreshPlacesRoute: ApiPublicCronRefreshPlacesRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
