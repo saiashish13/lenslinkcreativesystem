@@ -90,7 +90,7 @@ async function checkIpRateLimit(ip: string): Promise<boolean> {
 }
 
 /** Shared core: query Places, upsert listings + photos, return slug list. */
-async function runPlacesImport(data: z.infer<typeof SearchInput>) {
+export async function runPlacesImport(data: z.infer<typeof SearchInput>) {
   const apiKey = process.env.LOVABLE_API_KEY;
   const connKey = process.env.GOOGLE_MAPS_API_KEY;
   const browserKey = process.env.GOOGLE_MAPS_BROWSER_KEY;
