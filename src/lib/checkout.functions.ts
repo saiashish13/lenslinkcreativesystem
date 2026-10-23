@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import Stripe from "stripe";
 import { getRequestHeader } from "@tanstack/react-start/server";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 const PLANS = {
   "customer-pro": {
@@ -21,9 +22,17 @@ const Input = z.object({
   billingPeriod: z.enum(["monthly", "annual"]),
 });
 
+const VerifyInput = z.object({
+  sessionId: z.string().min(1),
+});
+
+// Creates a Stripe Checkout session. Only a signed-in user can call this, and
+// the session is bound to their user id (client_reference_id + metadata) so
+// later billing actions can be proven to belong to the same customer.
 export const createCheckoutSession = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => Input.parse(data))
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
     const secret = process.env.STRIPE_SECRET_KEY;
     if (!secret) throw new Error("STRIPE_SECRET_KEY is not configured");
 
@@ -31,6 +40,7 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
     const plan = PLANS[data.plan];
     const amount = data.billingPeriod === "annual" ? plan.annual : plan.monthly;
     const interval = data.billingPeriod === "annual" ? "year" : "month";
+    const email = (context.claims as { email?: string }).email;
 
     const host = getRequestHeader("x-forwarded-host") ?? getRequestHeader("host");
     const proto = getRequestHeader("x-forwarded-proto") ?? "https";
@@ -38,6 +48,8 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
 
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
+      customer_email: email || undefined,
+      client_reference_id: context.userId,
       line_items: [
         {
           price_data: {
@@ -52,8 +64,37 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
       success_url: `${origin}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/pricing?canceled=1`,
       allow_promotion_codes: true,
-      metadata: { plan: data.plan, billingPeriod: data.billingPeriod },
+      metadata: { plan: data.plan, billingPeriod: data.billingPeriod, user_id: context.userId },
     });
 
     return { url: session.url };
+  });
+
+// Verifies a completed checkout session. Only the user the session was created
+// for receives its details — anyone else gets a neutral "not owned" result.
+export const verifyCheckoutSession = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => VerifyInput.parse(data))
+  .handler(async ({ data, context }) => {
+    const secret = process.env.STRIPE_SECRET_KEY;
+    if (!secret) throw new Error("STRIPE_SECRET_KEY is not configured");
+
+    const stripe = new Stripe(secret);
+    const session = await stripe.checkout.sessions.retrieve(data.sessionId);
+
+    const owned =
+      session.client_reference_id === context.userId ||
+      session.metadata?.user_id === context.userId;
+    if (!owned) return { owned: false as const };
+
+    return {
+      owned: true as const,
+      status: session.status,
+      paymentStatus: session.payment_status,
+      plan: session.metadata?.plan ?? null,
+      billingPeriod: session.metadata?.billingPeriod ?? null,
+      amountTotal: session.amount_total ?? null,
+      currency: session.currency ?? "inr",
+      customerEmail: session.customer_details?.email ?? null,
+    };
   });
