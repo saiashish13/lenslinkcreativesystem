@@ -6,9 +6,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 
 export const Route = createFileRoute("/login")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    redirect: typeof search.redirect === "string" ? search.redirect : undefined,
-  }),
+  validateSearch: (search: Record<string, unknown>) => {
+    const out: { redirect?: string } = {};
+    if (typeof search.redirect === "string" && search.redirect) out.redirect = search.redirect;
+    return out;
+  },
   head: () => ({ meta: [{ title: "Sign in — LensLink AI" }] }),
   component: LoginPage,
 });
