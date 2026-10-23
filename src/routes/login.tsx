@@ -6,15 +6,26 @@ import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 
 export const Route = createFileRoute("/login")({
+  validateSearch: (search: Record<string, unknown>) => {
+    const out: { redirect?: string } = {};
+    if (typeof search.redirect === "string" && search.redirect) out.redirect = search.redirect;
+    return out;
+  },
   head: () => ({ meta: [{ title: "Sign in — LensLink AI" }] }),
   component: LoginPage,
 });
 
 function LoginPage() {
   const router = useRouter();
+  const search = Route.useSearch();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const afterSignIn = () => {
+    const target = search.redirect && search.redirect.startsWith("/") ? search.redirect : "/app";
+    router.navigate({ to: target });
+  };
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,7 +34,7 @@ function LoginPage() {
     setLoading(false);
     if (error) return toast.error(error.message);
     toast.success("Welcome back");
-    router.navigate({ to: "/app" });
+    afterSignIn();
   };
 
   const google = async () => {

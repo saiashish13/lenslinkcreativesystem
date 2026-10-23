@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Check, ArrowUpRight, Sparkles } from "lucide-react";
 import { SiteNav } from "@/components/site-nav";
 import { SiteFooter } from "@/components/site-footer";
 import { useServerFn } from "@tanstack/react-start";
 import { createCheckoutSession } from "@/lib/checkout.functions";
+import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/pricing")({
@@ -213,9 +214,16 @@ function PricingCard({ tier, annual }: { tier: PricingTier; annual: boolean }) {
   const showDiscount = annual && tier.annualDiscountLabel;
   const checkout = useServerFn(createCheckoutSession);
   const [loading, setLoading] = useState(false);
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
   const handleCheckout = async () => {
     if (!tier.planSlug) return;
+    if (!user) {
+      toast.error("Please sign in to subscribe.");
+      navigate({ to: "/login", search: { redirect: "/pricing" } });
+      return;
+    }
     setLoading(true);
     try {
       const { url } = await checkout({
