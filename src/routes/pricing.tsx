@@ -214,9 +214,16 @@ function PricingCard({ tier, annual }: { tier: PricingTier; annual: boolean }) {
   const showDiscount = annual && tier.annualDiscountLabel;
   const checkout = useServerFn(createCheckoutSession);
   const [loading, setLoading] = useState(false);
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
   const handleCheckout = async () => {
     if (!tier.planSlug) return;
+    if (!user) {
+      toast.error("Please sign in to subscribe.");
+      navigate({ to: "/login", search: { redirect: "/pricing" } });
+      return;
+    }
     setLoading(true);
     try {
       const { url } = await checkout({
