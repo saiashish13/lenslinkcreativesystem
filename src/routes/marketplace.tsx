@@ -78,7 +78,7 @@ function Marketplace() {
           setCoordsLabel(data.pref_location_label ?? "Saved location");
           setCoordsSource((data.pref_location_source as "gps" | "manual") ?? "manual");
           if (data.pref_radius_km && data.pref_radius_km !== search.radius) {
-            navigate({ search: (p: typeof search) => ({ ...p, radius: data.pref_radius_km }), replace: true });
+            navigate({ search: (p: typeof search) => ({ ...p, radius: data.pref_radius_km ?? 25 }), replace: true });
           }
         }
       } else {
